@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alternate Saturday Scheduler</title>
+<style>
+  :root {
+    --bg: #0f1220;
+    --bg2: #151a2e;
+    --card: #1b2140;
+    --card2: #222a52;
+    --text: #eef1ff;
+    --muted: #98a0c8;
+    --line: #2c3563;
+    --b1: #38bdf8;   /* Batch 1 - sky */
+    --b1d: #0ea5e9;
+    --b2: #f472b6;   /* Batch 2 - pink */
+    --b2d: #ec4899;
+    --ok: #34d399;
+    --off: #64748b;
+    --accent: #a78bfa;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1c2450 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 60px; }
+
+  header.top {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 18px 22px; margin-bottom: 22px;
+    background: linear-gradient(135deg, rgba(167,139,250,.18), rgba(56,189,248,.10));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .logo {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--b1), var(--b2));
+    display: grid; place-items: center; font-size: 24px; flex: none;
+  }
+  header.top h1 { font-size: 20px; margin: 0; letter-spacing: .3px; }
+  header.top p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .spacer { flex: 1; }
+
+  .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: start; }
+  @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: linear-gradient(180deg, var(--card), var(--bg2));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); margin-bottom: 22px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .card .sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+
+  /* This week banner */
+  .week-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px){ .week-banner { grid-template-columns: 1fr; } }
+  .status-box { border-radius: 14px; padding: 16px; border: 1px solid var(--line); }
+  .status-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .status-box .big { font-size: 22px; font-weight: 700; margin: 6px 0 10px; display:flex; align-items:center; gap:8px;}
+  .working { background: linear-gradient(180deg, rgba(52,211,153,.14), rgba(52,211,153,.04)); border-color: rgba(52,211,153,.4); }
+  .offbox  { background: linear-gradient(180deg, rgba(100,116,139,.14), rgba(100,116,139,.04)); }
+  .date-pill { display:inline-flex; align-items:center; gap:8px; background: var(--card2); border:1px solid var(--line); padding:6px 12px; border-radius:999px; font-size:13px; color:var(--muted);}
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--card2); border: 1px solid var(--line);
+    padding: 5px 11px; border-radius: 999px; font-size: 13px;
+  }
+  .chip.small { padding: 3px 9px; font-size: 12px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .dot.b1 { background: var(--b1); }
+  .dot.b2 { background: var(--b2); }
+  .empty-note { color: var(--muted); font-size: 13px; font-style: italic; }
+
+  /* Calendar */
+  .cal-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .cal-head .month { font-size:16px; font-weight:700; min-width:170px; text-align:center;}
+  .cal-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
+  .cal-dow { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; text-transform:uppercase; letter-spacing:1px;}
+  .cal-cell {
+    min-height:64px; border:1px solid var(--line); border-radius:10px; padding:6px;
+    background: rgba(255,255,255,.02); position:relative; font-size:13px;
+  }
+  .cal-cell.out { opacity:.32; }
+  .cal-cell.today { outline:2px solid var(--accent); outline-offset:-2px; }
+  .cal-cell .num { font-weight:600; }
+  .cal-cell.sat-b1 { background: linear-gradient(180deg, rgba(56,189,248,.22), rgba(56,189,248,.05)); border-color: rgba(56,189,248,.5);}
+  .cal-cell.sat-b2 { background: linear-gradient(180deg, rgba(244,114,182,.22), rgba(244,114,182,.05)); border-color: rgba(244,114,182,.5);}
+  .cal-tag { position:absolute; left:6px; right:6px; bottom:6px; font-size:10px; font-weight:700; letter-spacing:.5px; text-align:center; padding:2px; border-radius:6px;}
+  .cal-tag.b1 { background: var(--b1d); color:#04283a;}
+  .cal-tag.b2 { background: var(--b2d); color:#3a0420;}
+
+  /* Members admin */
+  .batch-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:560px){ .batch-cols{ grid-template-columns:1fr;} }
+  .batch-panel { border:1px solid var(--line); border-radius:14px; padding:14px; background:rgba(255,255,255,.02);}
+  .batch-panel h3 { margin:0 0 4px; font-size:14px; display:flex; align-items:center; gap:8px;}
+  .batch-panel .count { color:var(--muted); font-size:12px; margin:0 0 12px;}
+  .member-list { list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:6px; max-height:230px; overflow:auto;}
+  .member-list li { display:flex; align-items:center; gap:8px; background:var(--card2); border:1px solid var(--line); padding:7px 10px; border-radius:9px; font-size:13px;}
+  .member-list li .nm { flex:1; }
+  .member-list li button { background:transparent; border:none; color:var(--off); cursor:pointer; font-size:16px; line-height:1; padding:2px 4px; border-radius:6px;}
+  .member-list li button:hover { color:#f87171; background:rgba(248,113,113,.12);}
+  .add-row { display:flex; gap:6px;}
+  input[type="text"], input[type="date"], select {
+    background:var(--bg2); border:1px solid var(--line); color:var(--text);
+    padding:8px 11px; border-radius:9px; font-size:13px; width:100%; font-family:inherit;
+  }
+  input:focus, select:focus { outline:none; border-color:var(--accent);}
+  button.btn {
+    background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; border:none;
+    padding:8px 14px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  button.btn:hover { filter:brightness(1.08);}
+  button.btn.ghost { background:var(--card2); border:1px solid var(--line); color:var(--text);}
+  button.btn.tiny { padding:6px 10px; font-size:12px;}
+  .icon-btn { background:var(--card2); border:1px solid var(--line); color:var(--text); width:36px; height:36px; border-radius:9px; cursor:pointer; font-size:16px;}
+  .icon-btn:hover { border-color:var(--accent);}
+
+  .field { margin-bottom:12px;}
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px;}
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  .footer-note { color:var(--muted); font-size:12px; text-align:center; margin-top:8px;}
+  .toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--card2); border:1px solid var(--line); color:var(--text);
+    padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow);
+    opacity:0; pointer-events:none; transition:all .25s; z-index:50;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0);}
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">🗓️</div>
+    <div>
+      <h1>Alternate Saturday Scheduler</h1>
+      <p>Batch 1 & Batch 2 — who works this Saturday, who is off. Saved in your browser.</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn ghost tiny" id="jumpToday">Today</button>
+  </header>
+
+  <!-- THIS WEEK -->
+  <div class="card">
+    <h2>This Saturday</h2>
+    <p class="sub" id="thisWeekSub">—</p>
+    <div class="week-banner">
+      <div class="status-box working">
+        <div class="label">🟢 Working</div>
+        <div class="big"><span id="workBatchName">—</span></div>
+        <div class="chips" id="workingChips"></div>
+      </div>
+      <div class="status-box offbox">
+        <div class="label">😴 Off</div>
+        <div class="big"><span id="offBatchName">—</span></div>
+        <div class="chips" id="offChips"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- CALENDAR -->
+    <div class="card">
+      <h2>Calendar</h2>
+      <p class="sub">Each Saturday is coloured by the batch that works that day.</p>
+      <div class="cal-head">
+        <button class="icon-btn" id="prevMonth">‹</button>
+        <div class="month" id="calMonth">—</div>
+        <button class="icon-btn" id="nextMonth">›</button>
+        <div class="spacer"></div>
+        <select id="lookupSelect" title="Find a person" style="width:auto; max-width:180px;"></select>
+      </div>
+      <div class="cal-grid" id="calDow"></div>
+      <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+      <div class="legend">
+        <span class="chip small"><span class="dot b1"></span> Batch 1 works</span>
+        <span class="chip small"><span class="dot b2"></span> Batch 2 works</span>
+      </div>
+    </div>
+
+    <!-- SETTINGS + MEMBERS -->
+    <div>
+      <div class="card">
+        <h2>Rotation setup</h2>
+        <p class="sub">Pick any Saturday and which batch works that day — the rest alternate automatically.</p>
+        <div class="row2">
+          <div class="field">
+            <label>Reference Saturday</label>
+            <input type="date" id="anchorDate" />
+          </div>
+          <div class="field">
+            <label>Batch working that day</label>
+            <select id="anchorBatch">
+              <option value="1">Batch 1</option>
+              <option value="2">Batch 2</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn tiny" id="saveAnchor">Save rotation</button>
+      </div>
+
+      <div class="card">
+        <h2>Team members</h2>
+        <p class="sub">Add names to each batch. (Double-click a name to move it to the other batch.)</p>
+        <div class="batch-cols">
+          <div class="batch-panel">
+            <h3><span class="dot b1"></span> <span id="b1Title">Batch 1</span></h3>
+            <p class="count" id="b1Count">0 members</p>
+            <ul class="member-list" id="b1List"></ul>
+            <div class="add-row">
+              <input type="text" id="b1Input" placeholder="Add name…" />
+              <button class="btn" data-add="1">Add</button>
+            </div>
+          </div>
+          <div class="batch-panel">
+            <h3><span class="dot b2"></span> <span id="b2Title">Batch 2</span></h3>
+            <p class="count" id="b2Count">0 members</p>
+            <ul class="member-list" id="b2List"></ul>
+            <div class="add-row">
+              <input type="text" id="b2Input" placeholder="Add name…" />
+              <button class="btn" data-add="2">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Backup / Share</h2>
+        <p class="sub">Data lives in this browser only. Export to move it to another device or share the setup.</p>
+        <div class="chips">
+          <button class="btn ghost tiny" id="exportBtn">⬇ Export JSON</button>
+          <button class="btn ghost tiny" id="importBtn">⬆ Import JSON</button>
+          <button class="btn ghost tiny" id="resetBtn">↺ Reset</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Made with ❤️ · runs fully offline · no server, no cost.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+const LS_KEY = "altSaturday.v1";
+const MS_DAY = 86400000;
+
+// ---------- default state ----------
+function defaultState(){
+  return {
+    batches: {
+      "1": { name: "Batch 1", members: [] },
+      "2": { name: "Batch 2", members: [] }
+    },
+    anchorDate: nextSaturdayISO(),   // a Saturday
+    anchorBatch: "1"
+  };
+}
+
+let state = load();
+let viewYear, viewMonth; // calendar view
+initView();
+
+// ---------- date helpers (work in local midnight) ----------
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function parseISO(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y, m-1, d); }
+function atMidnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function daysBetween(a,b){ return Math.round((atMidnight(a)-atMidnight(b))/MS_DAY); }
+function nextSaturdayISO(){
+  const d = new Date();
+  const add = (6 - d.getDay() + 7) % 7; // 6 = Saturday
+  d.setDate(d.getDate()+add);
+  return ymd(d);
+}
+function isSaturday(d){ return d.getDay()===6; }
+
+// Which batch works on a given Saturday date object
+function workingBatchFor(dateObj){
+  const anchor = parseISO(state.anchorDate);
+  const weeks = Math.round(daysBetween(dateObj, anchor)/7);
+  const even = ((weeks % 2)+2)%2 === 0;
+  const base = state.anchorBatch === "1" ? "1" : "2";
+  const other = base === "1" ? "2" : "1";
+  return even ? base : other;
+}
+
+// ---------- persistence ----------
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function load(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    if(!s.batches || !s.batches["1"] || !s.batches["2"]) return defaultState();
+    s.anchorBatch = String(s.anchorBatch);
+    return s;
+  } catch(e){ return defaultState(); }
+}
+
+// ---------- rendering ----------
+function initView(){
+  const t = new Date();
+  viewYear = t.getFullYear(); viewMonth = t.getMonth();
+}
+
+function renderAll(){
+  renderThisWeek();
+  renderCalendar();
+  renderMembers();
+  renderLookup();
+  syncSettingsInputs();
+}
+
+function syncSettingsInputs(){
+  document.getElementById("anchorDate").value = state.anchorDate;
+  document.getElementById("anchorBatch").value = state.anchorBatch;
+  document.getElementById("b1Title").textContent = state.batches["1"].name;
+  document.getElementById("b2Title").textContent = state.batches["2"].name;
+}
+
+function currentOrNextSaturday(){
+  const d = new Date();
+  const add = (6 - d.getDay() + 7) % 7;
+  d.setDate(d.getDate()+add);
+  return atMidnight(d);
+}
+
+function fmtLong(d){
+  return d.toLocaleDateString(undefined,{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+}
+
+function renderThisWeek(){
+  const sat = currentOrNextSaturday();
+  const wb = workingBatchFor(sat);
+  const ob = wb === "1" ? "2" : "1";
+  const working = state.batches[wb];
+  const off = state.batches[ob];
+
+  const isToday = daysBetween(sat, new Date())===0;
+  document.getElementById("thisWeekSub").textContent =
+    (isToday ? "Today · " : "Next · ") + fmtLong(sat);
+
+  document.getElementById("workBatchName").textContent = working.name;
+  document.getElementById("offBatchName").textContent = off.name;
+
+  fillChips("workingChips", working.members, wb);
+  fillChips("offChips", off.members, ob);
+}
+
+function fillChips(elId, members, batch){
+  const el = document.getElementById(elId);
+  el.innerHTML = "";
+  if(!members.length){
+    el.innerHTML = '<span class="empty-note">No members added yet</span>';
+    return;
+  }
+  members.forEach(n=>{
+    const c = document.createElement("span");
+    c.className = "chip small";
+    c.innerHTML = '<span class="dot b'+batch+'"></span>'+escapeHtml(n);
+    el.appendChild(c);
+  });
+}
+
+function renderCalendar(){
+  const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const dowEl = document.getElementById("calDow");
+  dowEl.innerHTML = dow.map(d=>'<div class="cal-dow">'+d+'</div>').join("");
+
+  const first = new Date(viewYear, viewMonth, 1);
+  const startDay = first.getDay();
+  const gridStart = new Date(viewYear, viewMonth, 1 - startDay);
+
+  document.getElementById("calMonth").textContent =
+    first.toLocaleDateString(undefined,{month:"long", year:"numeric"});
+
+  const highlight = document.getElementById("lookupSelect").value; // "b:name" or ""
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  const today = atMidnight(new Date());
+
+  for(let i=0;i<42;i++){
+    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if(d.getMonth()!==viewMonth) cell.classList.add("out");
+    if(daysBetween(d, today)===0) cell.classList.add("today");
+
+    let tag = "";
+    if(isSaturday(d)){
+      const wb = workingBatchFor(d);
+      cell.classList.add(wb==="1" ? "sat-b1" : "sat-b2");
+      const label = state.batches[wb].name;
+      tag = '<div class="cal-tag b'+wb+'">'+escapeHtml(shortLabel(label))+'</div>';
+
+      // dim Saturdays where the looked-up person is OFF
+      if(highlight){
+        const [pb] = highlight.split("::");
+        if(pb !== wb) cell.style.opacity = "0.28";
+      }
+    }
+    cell.innerHTML = '<div class="num">'+d.getDate()+'</div>'+tag;
+    grid.appendChild(cell);
+  }
+}
+
+function shortLabel(name){ return name.length>10 ? name.slice(0,9)+"…" : name; }
+
+function renderMembers(){
+  ["1","2"].forEach(b=>{
+    const list = document.getElementById("b"+b+"List");
+    const members = state.batches[b].members;
+    document.getElementById("b"+b+"Count").textContent =
+      members.length + (members.length===1?" member":" members");
+    list.innerHTML = "";
+    members.forEach((n,idx)=>{
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="dot b'+b+'"></span><span class="nm">'+escapeHtml(n)+'</span>'+
+                     '<button title="Remove">&times;</button>';
+      li.querySelector(".nm").title = "Double-click to move to other batch";
+      li.querySelector(".nm").addEventListener("dblclick", ()=>moveMember(b, idx));
+      li.querySelector("button").addEventListener("click", ()=>removeMember(b, idx));
+      list.appendChild(li);
+    });
+  });
+}
+
+function renderLookup(){
+  const sel = document.getElementById("lookupSelect");
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">🔍 Highlight a person…</option>';
+  ["1","2"].forEach(b=>{
+    state.batches[b].members.forEach(n=>{
+      const o = document.createElement("option");
+      o.value = b+"::"+n;
+      o.textContent = n+" ("+state.batches[b].name+")";
+      sel.appendChild(o);
+    });
+  });
+  if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+}
+
+// ---------- actions ----------
+function addMember(b){
+  const inp = document.getElementById("b"+b+"Input");
+  const name = inp.value.trim();
+  if(!name) return;
+  const exists = ["1","2"].some(x=>state.batches[x].members.some(m=>m.toLowerCase()===name.toLowerCase()));
+  if(exists){ toast("“"+name+"” already exists"); return; }
+  state.batches[b].members.push(name);
+  inp.value = "";
+  save(); renderAll();
+  toast("Added "+name+" to "+state.batches[b].name);
+}
+function removeMember(b, idx){
+  const n = state.batches[b].members[idx];
+  state.batches[b].members.splice(idx,1);
+  save(); renderAll();
+  toast("Removed "+n);
+}
+function moveMember(from, idx){
+  const to = from==="1" ? "2" : "1";
+  const n = state.batches[from].members.splice(idx,1)[0];
+  state.batches[to].members.push(n);
+  save(); renderAll();
+  toast(n+" → "+state.batches[to].name);
+}
+
+// ---------- wire up ----------
+document.querySelectorAll("[data-add]").forEach(btn=>{
+  btn.addEventListener("click", ()=>addMember(btn.getAttribute("data-add")));
+});
+["1","2"].forEach(b=>{
+  document.getElementById("b"+b+"Input").addEventListener("keydown", e=>{
+    if(e.key==="Enter") addMember(b);
+  });
+});
+document.getElementById("saveAnchor").addEventListener("click", ()=>{
+  const dateVal = document.getElementById("anchorDate").value;
+  if(!dateVal){ toast("Pick a date first"); return; }
+  const d = parseISO(dateVal);
+  if(!isSaturday(d)){
+    // snap to the Saturday of that week
+    const add = (6 - d.getDay() + 7) % 7;
+    d.setDate(d.getDate()+add);
+    toast("Snapped to Saturday "+ymd(d));
+  }
+  state.anchorDate = ymd(d);
+  state.anchorBatch = document.getElementById("anchorBatch").value;
+  save(); renderAll();
+  toast("Rotation saved");
+});
+document.getElementById("prevMonth").addEventListener("click", ()=>{
+  viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar();
+});
+document.getElementById("nextMonth").addEventListener("click", ()=>{
+  viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar();
+});
+document.getElementById("jumpToday").addEventListener("click", ()=>{ initView(); renderCalendar(); });
+document.getElementById("lookupSelect").addEventListener("change", renderCalendar);
+
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "alternate-saturday-setup.json"; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const s = JSON.parse(r.result);
+      if(!s.batches || !s.batches["1"] || !s.batches["2"]) throw new Error("bad");
+      state = s; state.anchorBatch = String(state.anchorBatch);
+      save(); renderAll(); toast("Imported ✔");
+    }catch(err){ toast("Invalid file"); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("Reset everything? This clears all names and settings.")){
+    state = defaultState(); save(); renderAll(); toast("Reset done");
+  }
+});
+
+// ---------- utils ----------
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+
+renderAll();
+</script>
+</body>
+</html>
