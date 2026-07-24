@@ -6,142 +6,124 @@
 <title>Alternate Saturday Scheduler</title>
 <style>
   :root {
-    --bg: #0f1220;
-    --bg2: #151a2e;
-    --card: #1b2140;
-    --card2: #222a52;
-    --text: #eef1ff;
-    --muted: #98a0c8;
-    --line: #2c3563;
-    --b1: #38bdf8;   /* Batch 1 - sky */
-    --b1d: #0ea5e9;
-    --b2: #f472b6;   /* Batch 2 - pink */
-    --b2d: #ec4899;
-    --ok: #34d399;
-    --off: #64748b;
-    --accent: #a78bfa;
-    --shadow: 0 10px 30px rgba(0,0,0,.35);
-    --radius: 16px;
+    --bg: #0f1220; --bg2: #151a2e; --card: #1b2140; --card2: #222a52;
+    --text: #eef1ff; --muted: #98a0c8; --line: #2c3563;
+    --b1: #38bdf8; --b1d: #0ea5e9; --b2: #f472b6; --b2d: #ec4899;
+    --ok: #34d399; --off: #64748b; --accent: #a78bfa; --warn:#fbbf24;
+    --shadow: 0 10px 30px rgba(0,0,0,.35); --radius: 16px;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
     background: radial-gradient(1200px 600px at 20% -10%, #1c2450 0%, var(--bg) 55%) fixed;
-    color: var(--text);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
+    color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 18px 60px; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
 
   header.top {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    padding: 18px 22px; margin-bottom: 22px;
+    padding: 16px 20px; margin-bottom: 20px;
     background: linear-gradient(135deg, rgba(167,139,250,.18), rgba(56,189,248,.10));
-    border: 1px solid var(--line); border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
   }
-  .logo {
-    width: 46px; height: 46px; border-radius: 12px;
+  .logo { width: 46px; height: 46px; border-radius: 12px;
     background: linear-gradient(135deg, var(--b1), var(--b2));
-    display: grid; place-items: center; font-size: 24px; flex: none;
-  }
-  header.top h1 { font-size: 20px; margin: 0; letter-spacing: .3px; }
-  header.top p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    display: grid; place-items: center; font-size: 24px; flex: none; }
+  header.top h1 { font-size: 19px; margin: 0; letter-spacing: .3px; }
+  header.top p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
   .spacer { flex: 1; }
 
-  .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: start; }
+  /* sync badge */
+  .sync-badge { display:inline-flex; align-items:center; gap:7px; font-size:12px;
+    padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card2); color:var(--muted); cursor:pointer;}
+  .sync-badge .sd { width:9px; height:9px; border-radius:50%; background:var(--off);}
+  .sync-badge.on .sd { background:var(--ok); box-shadow:0 0 8px var(--ok);}
+  .sync-badge.err .sd { background:#f87171;}
+  .sync-badge.syncing .sd { background:var(--warn); animation:pulse 1s infinite;}
+  @keyframes pulse { 50%{opacity:.3;} }
+
+  .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: start; }
   @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
 
-  .card {
-    background: linear-gradient(180deg, var(--card), var(--bg2));
+  .card { background: linear-gradient(180deg, var(--card), var(--bg2));
     border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 20px; box-shadow: var(--shadow); margin-bottom: 22px;
-  }
+    padding: 18px; box-shadow: var(--shadow); margin-bottom: 20px; }
   .card h2 { margin: 0 0 4px; font-size: 16px; }
-  .card .sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .card .sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
 
-  /* This week banner */
-  .week-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .week-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 560px){ .week-banner { grid-template-columns: 1fr; } }
-  .status-box { border-radius: 14px; padding: 16px; border: 1px solid var(--line); }
-  .status-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-  .status-box .big { font-size: 22px; font-weight: 700; margin: 6px 0 10px; display:flex; align-items:center; gap:8px;}
+  .status-box { border-radius: 14px; padding: 15px; border: 1px solid var(--line); }
+  .status-box .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .status-box .big { font-size: 21px; font-weight: 700; margin: 6px 0 10px; }
   .working { background: linear-gradient(180deg, rgba(52,211,153,.14), rgba(52,211,153,.04)); border-color: rgba(52,211,153,.4); }
   .offbox  { background: linear-gradient(180deg, rgba(100,116,139,.14), rgba(100,116,139,.04)); }
-  .date-pill { display:inline-flex; align-items:center; gap:8px; background: var(--card2); border:1px solid var(--line); padding:6px 12px; border-radius:999px; font-size:13px; color:var(--muted);}
 
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--card2); border: 1px solid var(--line);
-    padding: 5px 11px; border-radius: 999px; font-size: 13px;
-  }
+  .weeknav { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .weeknav input[type=date]{ width:auto; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--card2);
+    border: 1px solid var(--line); padding: 5px 11px; border-radius: 999px; font-size: 13px; }
   .chip.small { padding: 3px 9px; font-size: 12px; }
   .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-  .dot.b1 { background: var(--b1); }
-  .dot.b2 { background: var(--b2); }
+  .dot.b1 { background: var(--b1); } .dot.b2 { background: var(--b2); }
   .empty-note { color: var(--muted); font-size: 13px; font-style: italic; }
 
-  /* Calendar */
-  .cal-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .cal-head .month { font-size:16px; font-weight:700; min-width:170px; text-align:center;}
-  .cal-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
-  .cal-dow { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; text-transform:uppercase; letter-spacing:1px;}
-  .cal-cell {
-    min-height:64px; border:1px solid var(--line); border-radius:10px; padding:6px;
-    background: rgba(255,255,255,.02); position:relative; font-size:13px;
-  }
+  .cal-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .cal-head .month { font-size:16px; font-weight:700; min-width:150px; text-align:center;}
+  .cal-grid { display:grid; grid-template-columns: repeat(7,1fr); gap:5px; }
+  .cal-dow { text-align:center; font-size:10px; color:var(--muted); padding:4px 0; text-transform:uppercase; letter-spacing:1px;}
+  .cal-cell { min-height:58px; border:1px solid var(--line); border-radius:10px; padding:5px;
+    background: rgba(255,255,255,.02); position:relative; font-size:13px; }
   .cal-cell.out { opacity:.32; }
   .cal-cell.today { outline:2px solid var(--accent); outline-offset:-2px; }
   .cal-cell .num { font-weight:600; }
   .cal-cell.sat-b1 { background: linear-gradient(180deg, rgba(56,189,248,.22), rgba(56,189,248,.05)); border-color: rgba(56,189,248,.5);}
   .cal-cell.sat-b2 { background: linear-gradient(180deg, rgba(244,114,182,.22), rgba(244,114,182,.05)); border-color: rgba(244,114,182,.5);}
-  .cal-tag { position:absolute; left:6px; right:6px; bottom:6px; font-size:10px; font-weight:700; letter-spacing:.5px; text-align:center; padding:2px; border-radius:6px;}
-  .cal-tag.b1 { background: var(--b1d); color:#04283a;}
-  .cal-tag.b2 { background: var(--b2d); color:#3a0420;}
+  .cal-tag { position:absolute; left:5px; right:5px; bottom:5px; font-size:9.5px; font-weight:700; letter-spacing:.3px; text-align:center; padding:2px; border-radius:6px;}
+  .cal-tag.b1 { background: var(--b1d); color:#04283a;} .cal-tag.b2 { background: var(--b2d); color:#3a0420;}
 
-  /* Members admin */
-  .batch-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .batch-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   @media (max-width:560px){ .batch-cols{ grid-template-columns:1fr;} }
-  .batch-panel { border:1px solid var(--line); border-radius:14px; padding:14px; background:rgba(255,255,255,.02);}
+  .batch-panel { border:1px solid var(--line); border-radius:14px; padding:13px; background:rgba(255,255,255,.02);}
   .batch-panel h3 { margin:0 0 4px; font-size:14px; display:flex; align-items:center; gap:8px;}
-  .batch-panel .count { color:var(--muted); font-size:12px; margin:0 0 12px;}
-  .member-list { list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:6px; max-height:230px; overflow:auto;}
+  .batch-panel .count { color:var(--muted); font-size:12px; margin:0 0 11px;}
+  .member-list { list-style:none; margin:0 0 11px; padding:0; display:flex; flex-direction:column; gap:6px; max-height:240px; overflow:auto;}
   .member-list li { display:flex; align-items:center; gap:8px; background:var(--card2); border:1px solid var(--line); padding:7px 10px; border-radius:9px; font-size:13px;}
-  .member-list li .nm { flex:1; }
-  .member-list li button { background:transparent; border:none; color:var(--off); cursor:pointer; font-size:16px; line-height:1; padding:2px 4px; border-radius:6px;}
+  .member-list li .nm { flex:1; cursor:text;}
+  .member-list li button { background:transparent; border:none; color:var(--off); cursor:pointer; font-size:15px; line-height:1; padding:2px 5px; border-radius:6px;}
   .member-list li button:hover { color:#f87171; background:rgba(248,113,113,.12);}
   .add-row { display:flex; gap:6px;}
-  input[type="text"], input[type="date"], select {
+  input[type="text"], input[type="date"], input[type="url"], input[type="password"], select {
     background:var(--bg2); border:1px solid var(--line); color:var(--text);
-    padding:8px 11px; border-radius:9px; font-size:13px; width:100%; font-family:inherit;
-  }
+    padding:8px 11px; border-radius:9px; font-size:13px; width:100%; font-family:inherit; }
   input:focus, select:focus { outline:none; border-color:var(--accent);}
-  button.btn {
-    background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; border:none;
-    padding:8px 14px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;
-  }
+  button.btn { background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; border:none;
+    padding:8px 14px; border-radius:9px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;}
   button.btn:hover { filter:brightness(1.08);}
   button.btn.ghost { background:var(--card2); border:1px solid var(--line); color:var(--text);}
   button.btn.tiny { padding:6px 10px; font-size:12px;}
-  .icon-btn { background:var(--card2); border:1px solid var(--line); color:var(--text); width:36px; height:36px; border-radius:9px; cursor:pointer; font-size:16px;}
+  .icon-btn { background:var(--card2); border:1px solid var(--line); color:var(--text); width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:16px;}
   .icon-btn:hover { border-color:var(--accent);}
-
-  .field { margin-bottom:12px;}
+  .field { margin-bottom:11px;}
   .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px;}
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted);}
   .footer-note { color:var(--muted); font-size:12px; text-align:center; margin-top:8px;}
-  .toast {
-    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+  details.setup { border:1px dashed var(--line); border-radius:10px; padding:10px 12px; margin-top:10px; font-size:12.5px; color:var(--muted);}
+  details.setup summary { cursor:pointer; color:var(--text); font-weight:600;}
+  details.setup pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:11.5px; color:#cdd6ff;}
+  .hint { font-size:11.5px; color:var(--muted); margin-top:6px;}
+  .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--card2); border:1px solid var(--line); color:var(--text);
     padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow);
-    opacity:0; pointer-events:none; transition:all .25s; z-index:50;
-  }
+    opacity:0; pointer-events:none; transition:all .25s; z-index:50;}
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0);}
-  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--muted);}
+  .banner-info { background:rgba(251,191,36,.10); border:1px solid rgba(251,191,36,.35); color:#fde68a;
+    padding:10px 14px; border-radius:10px; font-size:12.5px; margin-bottom:16px; }
+  .banner-info b{ color:#fff;}
 </style>
 </head>
 <body>
@@ -150,25 +132,37 @@
     <div class="logo">🗓️</div>
     <div>
       <h1>Alternate Saturday Scheduler</h1>
-      <p>Batch 1 & Batch 2 — who works this Saturday, who is off. Saved in your browser.</p>
+      <p>Batch 1 & Batch 2 — who works this Saturday, who is off.</p>
     </div>
     <div class="spacer"></div>
-    <button class="btn ghost tiny" id="jumpToday">Today</button>
+    <div class="sync-badge" id="syncBadge" title="Cloud sync status — click to open setup">
+      <span class="sd"></span><span id="syncText">Local only</span>
+    </div>
   </header>
+
+  <div class="banner-info" id="localWarn">
+    ⚠️ <b>Local only mode:</b> data is saved on <b>this device only</b> and will NOT sync to teammates.
+    Set up free <b>Cloud Sync</b> (below) so everyone sees the same data.
+  </div>
 
   <!-- THIS WEEK -->
   <div class="card">
-    <h2>This Saturday</h2>
+    <h2>Saturday summary</h2>
+    <div class="weeknav">
+      <button class="btn ghost tiny" id="thisSatBtn">This Saturday</button>
+      <span style="color:var(--muted);font-size:12px;">or pick any date:</span>
+      <input type="date" id="weekPick" />
+    </div>
     <p class="sub" id="thisWeekSub">—</p>
     <div class="week-banner">
       <div class="status-box working">
         <div class="label">🟢 Working</div>
-        <div class="big"><span id="workBatchName">—</span></div>
+        <div class="big" id="workBatchName">—</div>
         <div class="chips" id="workingChips"></div>
       </div>
       <div class="status-box offbox">
         <div class="label">😴 Off</div>
-        <div class="big"><span id="offBatchName">—</span></div>
+        <div class="big" id="offBatchName">—</div>
         <div class="chips" id="offChips"></div>
       </div>
     </div>
@@ -184,7 +178,7 @@
         <div class="month" id="calMonth">—</div>
         <button class="icon-btn" id="nextMonth">›</button>
         <div class="spacer"></div>
-        <select id="lookupSelect" title="Find a person" style="width:auto; max-width:180px;"></select>
+        <select id="lookupSelect" title="Highlight a person" style="width:auto; max-width:180px;"></select>
       </div>
       <div class="cal-grid" id="calDow"></div>
       <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
@@ -194,55 +188,82 @@
       </div>
     </div>
 
-    <!-- SETTINGS + MEMBERS -->
     <div>
+      <!-- ROTATION -->
       <div class="card">
         <h2>Rotation setup</h2>
-        <p class="sub">Pick any Saturday and which batch works that day — the rest alternate automatically.</p>
+        <p class="sub">Pick any Saturday and which batch works — the rest alternate automatically.</p>
         <div class="row2">
-          <div class="field">
-            <label>Reference Saturday</label>
-            <input type="date" id="anchorDate" />
-          </div>
-          <div class="field">
-            <label>Batch working that day</label>
-            <select id="anchorBatch">
-              <option value="1">Batch 1</option>
-              <option value="2">Batch 2</option>
-            </select>
+          <div class="field"><label>Reference Saturday</label><input type="date" id="anchorDate" /></div>
+          <div class="field"><label>Batch working that day</label>
+            <select id="anchorBatch"><option value="1">Batch 1</option><option value="2">Batch 2</option></select>
           </div>
         </div>
         <button class="btn tiny" id="saveAnchor">Save rotation</button>
       </div>
 
+      <!-- MEMBERS -->
       <div class="card">
         <h2>Team members</h2>
-        <p class="sub">Add names to each batch. (Double-click a name to move it to the other batch.)</p>
+        <p class="sub">Add names to each batch. Click ✎ to edit, double-click a name to move batch.</p>
         <div class="batch-cols">
           <div class="batch-panel">
-            <h3><span class="dot b1"></span> <span id="b1Title">Batch 1</span></h3>
+            <h3><span class="dot b1"></span> Batch 1</h3>
             <p class="count" id="b1Count">0 members</p>
             <ul class="member-list" id="b1List"></ul>
-            <div class="add-row">
-              <input type="text" id="b1Input" placeholder="Add name…" />
-              <button class="btn" data-add="1">Add</button>
-            </div>
+            <div class="add-row"><input type="text" id="b1Input" placeholder="Add name…" />
+              <button class="btn" data-add="1">Add</button></div>
           </div>
           <div class="batch-panel">
-            <h3><span class="dot b2"></span> <span id="b2Title">Batch 2</span></h3>
+            <h3><span class="dot b2"></span> Batch 2</h3>
             <p class="count" id="b2Count">0 members</p>
             <ul class="member-list" id="b2List"></ul>
-            <div class="add-row">
-              <input type="text" id="b2Input" placeholder="Add name…" />
-              <button class="btn" data-add="2">Add</button>
-            </div>
+            <div class="add-row"><input type="text" id="b2Input" placeholder="Add name…" />
+              <button class="btn" data-add="2">Add</button></div>
           </div>
         </div>
       </div>
 
+      <!-- CLOUD SYNC -->
       <div class="card">
-        <h2>Backup / Share</h2>
-        <p class="sub">Data lives in this browser only. Export to move it to another device or share the setup.</p>
+        <h2>☁️ Cloud Sync <span style="font-size:12px;color:var(--muted);font-weight:400;">(free · shared)</span></h2>
+        <p class="sub">Connect a free Supabase project so all teammates see the same live data.</p>
+        <div class="field"><label>Supabase Project URL</label>
+          <input type="url" id="cfgUrl" placeholder="https://xxxx.supabase.co" /></div>
+        <div class="field"><label>Anon public API key</label>
+          <input type="password" id="cfgKey" placeholder="eyJhbGciOi…" /></div>
+        <div class="field"><label>Team ID (share the same value with your team)</label>
+          <input type="text" id="cfgTeam" placeholder="main" /></div>
+        <div class="chips">
+          <button class="btn tiny" id="connectBtn">Connect & Sync</button>
+          <button class="btn ghost tiny" id="shareLinkBtn">🔗 Copy team link</button>
+          <button class="btn ghost tiny" id="disconnectBtn">Disconnect</button>
+        </div>
+        <p class="hint" id="cloudHint">Not connected. Fill the fields above, or open a team link a colleague shared.</p>
+        <details class="setup">
+          <summary>How to get these (2 min, free)</summary>
+          <ol style="padding-left:18px; line-height:1.7;">
+            <li>Create a free account at <a href="https://supabase.com" target="_blank">supabase.com</a> → New project.</li>
+            <li>Project → <b>Settings → API</b>: copy the <b>Project URL</b> and the <b>anon public</b> key into the fields above.</li>
+            <li>Open <b>SQL Editor</b> → New query → paste &amp; run this:</li>
+          </ol>
+          <pre>create table if not exists app_state (
+  id text primary key,
+  data jsonb not null,
+  updated_at timestamptz default now()
+);
+alter table app_state enable row level security;
+create policy "team read"  on app_state for select using (true);
+create policy "team write" on app_state for insert with check (true);
+create policy "team update" on app_state for update using (true);</pre>
+          <p>Then click <b>Connect &amp; Sync</b>. Share the <b>team link</b> with colleagues — they open it and instantly see the same data. (The anon key is safe to share within your team for this internal tool.)</p>
+        </details>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="card">
+        <h2>Backup</h2>
+        <p class="sub">Export / import the setup as a file.</p>
         <div class="chips">
           <button class="btn ghost tiny" id="exportBtn">⬇ Export JSON</button>
           <button class="btn ghost tiny" id="importBtn">⬆ Import JSON</button>
@@ -253,311 +274,305 @@
     </div>
   </div>
 
-  <p class="footer-note">Made with ❤️ · runs fully offline · no server, no cost.</p>
+  <p class="footer-note">Runs fully static · deployable free on Netlify · optional free cloud sync.</p>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
-
 const LS_KEY = "altSaturday.v1";
+const CFG_KEY = "altSaturday.cloud";
 const MS_DAY = 86400000;
 
-// ---------- default state ----------
+/* ---------- state ---------- */
 function defaultState(){
-  return {
-    batches: {
-      "1": { name: "Batch 1", members: [] },
-      "2": { name: "Batch 2", members: [] }
-    },
-    anchorDate: nextSaturdayISO(),   // a Saturday
-    anchorBatch: "1"
-  };
+  return { batches:{ "1":{name:"Batch 1",members:[]}, "2":{name:"Batch 2",members:[]} },
+           anchorDate: nextSaturdayISO(), anchorBatch:"1" };
 }
-
-let state = load();
-let viewYear, viewMonth; // calendar view
+let state = loadLocal();
+let cloud = loadCloudCfg();     // {url,key,team} or null
+let selectedDate = null;        // for the summary date picker
+let viewYear, viewMonth;
+let pollTimer = null, lastRemoteStamp = 0, saving = false;
 initView();
 
-// ---------- date helpers (work in local midnight) ----------
+/* ---------- date helpers ---------- */
 function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function parseISO(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y, m-1, d); }
-function atMidnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function parseISO(s){ const[y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+function atMidnight(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
 function daysBetween(a,b){ return Math.round((atMidnight(a)-atMidnight(b))/MS_DAY); }
-function nextSaturdayISO(){
-  const d = new Date();
-  const add = (6 - d.getDay() + 7) % 7; // 6 = Saturday
-  d.setDate(d.getDate()+add);
-  return ymd(d);
-}
+function nextSaturdayISO(){ const d=new Date(); d.setDate(d.getDate()+((6-d.getDay()+7)%7)); return ymd(d); }
 function isSaturday(d){ return d.getDay()===6; }
-
-// Which batch works on a given Saturday date object
+function saturdayOfWeek(d){ const x=atMidnight(d); x.setDate(x.getDate()+((6-x.getDay()+7)%7)); return x; }
 function workingBatchFor(dateObj){
-  const anchor = parseISO(state.anchorDate);
-  const weeks = Math.round(daysBetween(dateObj, anchor)/7);
-  const even = ((weeks % 2)+2)%2 === 0;
-  const base = state.anchorBatch === "1" ? "1" : "2";
-  const other = base === "1" ? "2" : "1";
-  return even ? base : other;
+  const anchor=parseISO(state.anchorDate);
+  const weeks=Math.round(daysBetween(dateObj,anchor)/7);
+  const even=((weeks%2)+2)%2===0;
+  const base=state.anchorBatch==="1"?"1":"2", other=base==="1"?"2":"1";
+  return even?base:other;
 }
 
-// ---------- persistence ----------
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function load(){
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return defaultState();
-    const s = JSON.parse(raw);
-    if(!s.batches || !s.batches["1"] || !s.batches["2"]) return defaultState();
-    s.anchorBatch = String(s.anchorBatch);
-    return s;
-  } catch(e){ return defaultState(); }
+/* ---------- local persistence ---------- */
+function saveLocal(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function loadLocal(){
+  try{ const raw=localStorage.getItem(LS_KEY); if(!raw) return defaultState();
+    const s=JSON.parse(raw); if(!s.batches||!s.batches["1"]||!s.batches["2"]) return defaultState();
+    s.anchorBatch=String(s.anchorBatch); return s;
+  }catch(e){ return defaultState(); }
 }
-
-// ---------- rendering ----------
-function initView(){
-  const t = new Date();
-  viewYear = t.getFullYear(); viewMonth = t.getMonth();
-}
-
-function renderAll(){
-  renderThisWeek();
-  renderCalendar();
-  renderMembers();
-  renderLookup();
-  syncSettingsInputs();
-}
-
-function syncSettingsInputs(){
-  document.getElementById("anchorDate").value = state.anchorDate;
-  document.getElementById("anchorBatch").value = state.anchorBatch;
-  document.getElementById("b1Title").textContent = state.batches["1"].name;
-  document.getElementById("b2Title").textContent = state.batches["2"].name;
-}
-
-function currentOrNextSaturday(){
-  const d = new Date();
-  const add = (6 - d.getDay() + 7) % 7;
-  d.setDate(d.getDate()+add);
-  return atMidnight(d);
-}
-
-function fmtLong(d){
-  return d.toLocaleDateString(undefined,{weekday:"long", day:"numeric", month:"long", year:"numeric"});
-}
-
-function renderThisWeek(){
-  const sat = currentOrNextSaturday();
-  const wb = workingBatchFor(sat);
-  const ob = wb === "1" ? "2" : "1";
-  const working = state.batches[wb];
-  const off = state.batches[ob];
-
-  const isToday = daysBetween(sat, new Date())===0;
-  document.getElementById("thisWeekSub").textContent =
-    (isToday ? "Today · " : "Next · ") + fmtLong(sat);
-
-  document.getElementById("workBatchName").textContent = working.name;
-  document.getElementById("offBatchName").textContent = off.name;
-
-  fillChips("workingChips", working.members, wb);
-  fillChips("offChips", off.members, ob);
-}
-
-function fillChips(elId, members, batch){
-  const el = document.getElementById(elId);
-  el.innerHTML = "";
-  if(!members.length){
-    el.innerHTML = '<span class="empty-note">No members added yet</span>';
-    return;
-  }
-  members.forEach(n=>{
-    const c = document.createElement("span");
-    c.className = "chip small";
-    c.innerHTML = '<span class="dot b'+batch+'"></span>'+escapeHtml(n);
-    el.appendChild(c);
-  });
-}
-
-function renderCalendar(){
-  const dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const dowEl = document.getElementById("calDow");
-  dowEl.innerHTML = dow.map(d=>'<div class="cal-dow">'+d+'</div>').join("");
-
-  const first = new Date(viewYear, viewMonth, 1);
-  const startDay = first.getDay();
-  const gridStart = new Date(viewYear, viewMonth, 1 - startDay);
-
-  document.getElementById("calMonth").textContent =
-    first.toLocaleDateString(undefined,{month:"long", year:"numeric"});
-
-  const highlight = document.getElementById("lookupSelect").value; // "b:name" or ""
-  const grid = document.getElementById("calGrid");
-  grid.innerHTML = "";
-  const today = atMidnight(new Date());
-
-  for(let i=0;i<42;i++){
-    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
-    const cell = document.createElement("div");
-    cell.className = "cal-cell";
-    if(d.getMonth()!==viewMonth) cell.classList.add("out");
-    if(daysBetween(d, today)===0) cell.classList.add("today");
-
-    let tag = "";
-    if(isSaturday(d)){
-      const wb = workingBatchFor(d);
-      cell.classList.add(wb==="1" ? "sat-b1" : "sat-b2");
-      const label = state.batches[wb].name;
-      tag = '<div class="cal-tag b'+wb+'">'+escapeHtml(shortLabel(label))+'</div>';
-
-      // dim Saturdays where the looked-up person is OFF
-      if(highlight){
-        const [pb] = highlight.split("::");
-        if(pb !== wb) cell.style.opacity = "0.28";
-      }
+function loadCloudCfg(){
+  // from URL hash (#cfg=base64) first — lets teammates auto-connect via shared link
+  try{
+    if(location.hash.startsWith("#cfg=")){
+      const c=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(5)))));
+      if(c.url&&c.key){ c.team=c.team||"main"; localStorage.setItem(CFG_KEY,JSON.stringify(c));
+        history.replaceState(null,"",location.pathname+location.search); return c; }
     }
-    cell.innerHTML = '<div class="num">'+d.getDate()+'</div>'+tag;
-    grid.appendChild(cell);
+  }catch(e){}
+  try{ const raw=localStorage.getItem(CFG_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+
+/* ---------- cloud (Supabase REST) ---------- */
+function cloudOn(){ return !!(cloud&&cloud.url&&cloud.key); }
+function restUrl(){ return cloud.url.replace(/\/$/,"")+"/rest/v1/app_state"; }
+function hdrs(extra){ return Object.assign({ apikey:cloud.key, Authorization:"Bearer "+cloud.key,
+  "Content-Type":"application/json" }, extra||{}); }
+
+async function cloudLoad(){
+  const r = await fetch(restUrl()+"?id=eq."+encodeURIComponent(cloud.team)+"&select=data,updated_at",
+    { headers: hdrs() });
+  if(!r.ok) throw new Error("load "+r.status);
+  const rows = await r.json();
+  return rows[0] || null;
+}
+async function cloudSave(){
+  const body = [{ id: cloud.team, data: state, updated_at: new Date().toISOString() }];
+  const r = await fetch(restUrl(), { method:"POST",
+    headers: hdrs({ Prefer:"resolution=merge-duplicates,return=representation" }),
+    body: JSON.stringify(body) });
+  if(!r.ok) throw new Error("save "+r.status);
+  const rows = await r.json();
+  if(rows[0]&&rows[0].updated_at) lastRemoteStamp = Date.parse(rows[0].updated_at);
+}
+
+function setSync(status, text){
+  const b=document.getElementById("syncBadge");
+  b.className="sync-badge"+(status?" "+status:"");
+  document.getElementById("syncText").textContent=text;
+  document.getElementById("localWarn").style.display = cloudOn()?"none":"";
+}
+
+let saveTimer=null;
+function persist(){                 // called on every change
+  saveLocal();
+  if(cloudOn()){
+    setSync("syncing","Saving…");
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(async()=>{
+      try{ saving=true; await cloudSave(); setSync("on","Synced ✓"); }
+      catch(e){ setSync("err","Sync error"); }
+      finally{ saving=false; }
+    },400);
   }
 }
 
-function shortLabel(name){ return name.length>10 ? name.slice(0,9)+"…" : name; }
+async function connectCloud(cfg){
+  cloud=cfg; localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  setSync("syncing","Connecting…");
+  try{
+    const row = await cloudLoad();
+    if(row){                        // adopt existing team data
+      state=row.data; state.anchorBatch=String(state.anchorBatch);
+      lastRemoteStamp=Date.parse(row.updated_at); saveLocal();
+    }else{                          // seed the team with our local data
+      await cloudSave();
+    }
+    setSync("on","Synced ✓"); renderAll(); startPolling(); toast("Cloud connected ✓");
+  }catch(e){
+    setSync("err","Connect failed"); toast("Connect failed — check URL/key & SQL setup");
+  }
+}
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  if(!cloudOn()) return;
+  pollTimer=setInterval(async()=>{
+    if(saving) return;
+    try{
+      const row=await cloudLoad();
+      if(row){
+        const st=Date.parse(row.updated_at);
+        if(st>lastRemoteStamp){       // a teammate changed it
+          lastRemoteStamp=st; state=row.data; state.anchorBatch=String(state.anchorBatch);
+          saveLocal(); renderAll(); setSync("on","Updated from team ✓");
+        }
+      }
+    }catch(e){ setSync("err","Sync error"); }
+  }, 8000);
+}
 
+/* ---------- rendering ---------- */
+function initView(){ const t=new Date(); viewYear=t.getFullYear(); viewMonth=t.getMonth(); }
+function renderAll(){ renderSummary(); renderCalendar(); renderMembers(); renderLookup(); syncInputs(); }
+function syncInputs(){
+  document.getElementById("anchorDate").value=state.anchorDate;
+  document.getElementById("anchorBatch").value=state.anchorBatch;
+  if(cloud){ document.getElementById("cfgUrl").value=cloud.url||"";
+    document.getElementById("cfgKey").value=cloud.key||"";
+    document.getElementById("cfgTeam").value=cloud.team||"main"; }
+  document.getElementById("cloudHint").textContent = cloudOn()
+    ? ("Connected · Team “"+cloud.team+"”. Share the team link so colleagues sync automatically.")
+    : "Not connected. Fill the fields above, or open a team link a colleague shared.";
+}
+function fmtLong(d){ return d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
+
+function renderSummary(){
+  const sat = selectedDate ? saturdayOfWeek(selectedDate) : saturdayOfWeek(new Date());
+  const wb = workingBatchFor(sat), ob = wb==="1"?"2":"1";
+  const isToday = daysBetween(sat,new Date())===0;
+  document.getElementById("thisWeekSub").textContent =
+    (selectedDate?"Selected week · ":(isToday?"Today · ":"Upcoming · ")) + fmtLong(sat);
+  document.getElementById("workBatchName").textContent = state.batches[wb].name;
+  document.getElementById("offBatchName").textContent = state.batches[ob].name;
+  fillChips("workingChips", state.batches[wb].members, wb);
+  fillChips("offChips", state.batches[ob].members, ob);
+}
+function fillChips(elId, members, batch){
+  const el=document.getElementById(elId); el.innerHTML="";
+  if(!members.length){ el.innerHTML='<span class="empty-note">No members yet</span>'; return; }
+  members.forEach(n=>{ const c=document.createElement("span"); c.className="chip small";
+    c.innerHTML='<span class="dot b'+batch+'"></span>'+escapeHtml(n); el.appendChild(c); });
+}
+function renderCalendar(){
+  const dow=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  document.getElementById("calDow").innerHTML=dow.map(d=>'<div class="cal-dow">'+d+'</div>').join("");
+  const first=new Date(viewYear,viewMonth,1);
+  const gridStart=new Date(viewYear,viewMonth,1-first.getDay());
+  document.getElementById("calMonth").textContent=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const highlight=document.getElementById("lookupSelect").value;
+  const grid=document.getElementById("calGrid"); grid.innerHTML="";
+  const today=atMidnight(new Date());
+  for(let i=0;i<42;i++){
+    const d=new Date(gridStart.getFullYear(),gridStart.getMonth(),gridStart.getDate()+i);
+    const cell=document.createElement("div"); cell.className="cal-cell";
+    if(d.getMonth()!==viewMonth) cell.classList.add("out");
+    if(daysBetween(d,today)===0) cell.classList.add("today");
+    let tag="";
+    if(isSaturday(d)){
+      const wb=workingBatchFor(d); cell.classList.add(wb==="1"?"sat-b1":"sat-b2");
+      tag='<div class="cal-tag b'+wb+'">'+escapeHtml(shortLabel(state.batches[wb].name))+'</div>';
+      if(highlight){ const pb=highlight.split("::")[0]; if(pb!==wb) cell.style.opacity="0.28"; }
+    }
+    cell.innerHTML='<div class="num">'+d.getDate()+'</div>'+tag; grid.appendChild(cell);
+  }
+}
+function shortLabel(n){ return n.length>10?n.slice(0,9)+"…":n; }
 function renderMembers(){
   ["1","2"].forEach(b=>{
-    const list = document.getElementById("b"+b+"List");
-    const members = state.batches[b].members;
-    document.getElementById("b"+b+"Count").textContent =
-      members.length + (members.length===1?" member":" members");
-    list.innerHTML = "";
+    const list=document.getElementById("b"+b+"List"), members=state.batches[b].members;
+    document.getElementById("b"+b+"Count").textContent=members.length+(members.length===1?" member":" members");
+    list.innerHTML="";
     members.forEach((n,idx)=>{
-      const li = document.createElement("li");
-      li.innerHTML = '<span class="dot b'+b+'"></span><span class="nm">'+escapeHtml(n)+'</span>'+
-                     '<button title="Remove">&times;</button>';
-      li.querySelector(".nm").title = "Double-click to move to other batch";
-      li.querySelector(".nm").addEventListener("dblclick", ()=>moveMember(b, idx));
-      li.querySelector("button").addEventListener("click", ()=>removeMember(b, idx));
+      const li=document.createElement("li");
+      li.innerHTML='<span class="dot b'+b+'"></span><span class="nm">'+escapeHtml(n)+'</span>'+
+        '<button class="edit" title="Edit">✎</button><button class="del" title="Remove">&times;</button>';
+      li.querySelector(".nm").title="Double-click to move to other batch";
+      li.querySelector(".nm").addEventListener("dblclick",()=>moveMember(b,idx));
+      li.querySelector(".edit").addEventListener("click",()=>editMember(b,idx));
+      li.querySelector(".del").addEventListener("click",()=>removeMember(b,idx));
       list.appendChild(li);
     });
   });
 }
-
 function renderLookup(){
-  const sel = document.getElementById("lookupSelect");
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">🔍 Highlight a person…</option>';
-  ["1","2"].forEach(b=>{
-    state.batches[b].members.forEach(n=>{
-      const o = document.createElement("option");
-      o.value = b+"::"+n;
-      o.textContent = n+" ("+state.batches[b].name+")";
-      sel.appendChild(o);
-    });
-  });
-  if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  const sel=document.getElementById("lookupSelect"), prev=sel.value;
+  sel.innerHTML='<option value="">🔍 Highlight a person…</option>';
+  ["1","2"].forEach(b=> state.batches[b].members.forEach(n=>{
+    const o=document.createElement("option"); o.value=b+"::"+n;
+    o.textContent=n+" ("+state.batches[b].name+")"; sel.appendChild(o); }));
+  if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
 }
 
-// ---------- actions ----------
+/* ---------- actions ---------- */
 function addMember(b){
-  const inp = document.getElementById("b"+b+"Input");
-  const name = inp.value.trim();
-  if(!name) return;
-  const exists = ["1","2"].some(x=>state.batches[x].members.some(m=>m.toLowerCase()===name.toLowerCase()));
-  if(exists){ toast("“"+name+"” already exists"); return; }
-  state.batches[b].members.push(name);
-  inp.value = "";
-  save(); renderAll();
-  toast("Added "+name+" to "+state.batches[b].name);
+  const inp=document.getElementById("b"+b+"Input"), name=inp.value.trim(); if(!name) return;
+  if(nameExists(name)){ toast("“"+name+"” already exists"); return; }
+  state.batches[b].members.push(name); inp.value=""; persist(); renderAll(); toast("Added "+name);
 }
-function removeMember(b, idx){
-  const n = state.batches[b].members[idx];
-  state.batches[b].members.splice(idx,1);
-  save(); renderAll();
-  toast("Removed "+n);
+function removeMember(b,idx){ const n=state.batches[b].members[idx];
+  state.batches[b].members.splice(idx,1); persist(); renderAll(); toast("Removed "+n); }
+function moveMember(from,idx){ const to=from==="1"?"2":"1";
+  const n=state.batches[from].members.splice(idx,1)[0]; state.batches[to].members.push(n);
+  persist(); renderAll(); toast(n+" → "+state.batches[to].name); }
+function editMember(b,idx){
+  const cur=state.batches[b].members[idx]; const nn=prompt("Edit name:",cur); if(nn===null) return;
+  const name=nn.trim(); if(!name) return;
+  if(name.toLowerCase()!==cur.toLowerCase() && nameExists(name)){ toast("Name already exists"); return; }
+  state.batches[b].members[idx]=name; persist(); renderAll(); toast("Updated");
 }
-function moveMember(from, idx){
-  const to = from==="1" ? "2" : "1";
-  const n = state.batches[from].members.splice(idx,1)[0];
-  state.batches[to].members.push(n);
-  save(); renderAll();
-  toast(n+" → "+state.batches[to].name);
-}
+function nameExists(name){ return ["1","2"].some(x=>state.batches[x].members.some(m=>m.toLowerCase()===name.toLowerCase())); }
 
-// ---------- wire up ----------
-document.querySelectorAll("[data-add]").forEach(btn=>{
-  btn.addEventListener("click", ()=>addMember(btn.getAttribute("data-add")));
+/* ---------- wire up ---------- */
+document.querySelectorAll("[data-add]").forEach(btn=>btn.addEventListener("click",()=>addMember(btn.getAttribute("data-add"))));
+["1","2"].forEach(b=>document.getElementById("b"+b+"Input").addEventListener("keydown",e=>{ if(e.key==="Enter") addMember(b); }));
+document.getElementById("saveAnchor").addEventListener("click",()=>{
+  const v=document.getElementById("anchorDate").value; if(!v){ toast("Pick a date"); return; }
+  const d=parseISO(v);
+  if(!isSaturday(d)){ const s=saturdayOfWeek(d); state.anchorDate=ymd(s); toast("Snapped to Saturday "+ymd(s)); }
+  else state.anchorDate=ymd(d);
+  state.anchorBatch=document.getElementById("anchorBatch").value; persist(); renderAll(); toast("Rotation saved");
 });
-["1","2"].forEach(b=>{
-  document.getElementById("b"+b+"Input").addEventListener("keydown", e=>{
-    if(e.key==="Enter") addMember(b);
-  });
-});
-document.getElementById("saveAnchor").addEventListener("click", ()=>{
-  const dateVal = document.getElementById("anchorDate").value;
-  if(!dateVal){ toast("Pick a date first"); return; }
-  const d = parseISO(dateVal);
-  if(!isSaturday(d)){
-    // snap to the Saturday of that week
-    const add = (6 - d.getDay() + 7) % 7;
-    d.setDate(d.getDate()+add);
-    toast("Snapped to Saturday "+ymd(d));
-  }
-  state.anchorDate = ymd(d);
-  state.anchorBatch = document.getElementById("anchorBatch").value;
-  save(); renderAll();
-  toast("Rotation saved");
-});
-document.getElementById("prevMonth").addEventListener("click", ()=>{
-  viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;} renderCalendar();
-});
-document.getElementById("nextMonth").addEventListener("click", ()=>{
-  viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;} renderCalendar();
-});
-document.getElementById("jumpToday").addEventListener("click", ()=>{ initView(); renderCalendar(); });
-document.getElementById("lookupSelect").addEventListener("change", renderCalendar);
+document.getElementById("prevMonth").addEventListener("click",()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
+document.getElementById("nextMonth").addEventListener("click",()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
+document.getElementById("thisSatBtn").addEventListener("click",()=>{ selectedDate=null; document.getElementById("weekPick").value=""; renderSummary(); });
+document.getElementById("weekPick").addEventListener("change",e=>{ selectedDate=e.target.value?parseISO(e.target.value):null; renderSummary(); });
+document.getElementById("lookupSelect").addEventListener("change",renderCalendar);
+document.getElementById("syncBadge").addEventListener("click",()=>document.getElementById("cfgUrl").scrollIntoView({behavior:"smooth",block:"center"}));
 
-document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "alternate-saturday-setup.json"; a.click();
-  URL.revokeObjectURL(url);
+document.getElementById("connectBtn").addEventListener("click",()=>{
+  const url=document.getElementById("cfgUrl").value.trim();
+  const key=document.getElementById("cfgKey").value.trim();
+  const team=(document.getElementById("cfgTeam").value.trim())||"main";
+  if(!url||!key){ toast("Enter URL and key"); return; }
+  connectCloud({url,key,team});
 });
-document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change", e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ()=>{
-    try{
-      const s = JSON.parse(r.result);
-      if(!s.batches || !s.batches["1"] || !s.batches["2"]) throw new Error("bad");
-      state = s; state.anchorBatch = String(state.anchorBatch);
-      save(); renderAll(); toast("Imported ✔");
-    }catch(err){ toast("Invalid file"); }
-  };
-  r.readAsText(f);
-  e.target.value = "";
+document.getElementById("disconnectBtn").addEventListener("click",()=>{
+  cloud=null; localStorage.removeItem(CFG_KEY); if(pollTimer) clearInterval(pollTimer);
+  setSync("","Local only"); syncInputs(); toast("Disconnected (local only)");
 });
-document.getElementById("resetBtn").addEventListener("click", ()=>{
-  if(confirm("Reset everything? This clears all names and settings.")){
-    state = defaultState(); save(); renderAll(); toast("Reset done");
-  }
+document.getElementById("shareLinkBtn").addEventListener("click",()=>{
+  if(!cloudOn()){ toast("Connect first"); return; }
+  const payload=btoa(unescape(encodeURIComponent(JSON.stringify(cloud))));
+  const link=location.origin+location.pathname+"#cfg="+payload;
+  navigator.clipboard.writeText(link).then(()=>toast("Team link copied ✓"),()=>prompt("Copy this link:",link));
 });
 
-// ---------- utils ----------
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const u=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=u; a.download="alternate-saturday-setup.json"; a.click(); URL.revokeObjectURL(u);
+});
+document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ const s=JSON.parse(r.result);
+    if(!s.batches||!s.batches["1"]||!s.batches["2"]) throw 0;
+    state=s; state.anchorBatch=String(state.anchorBatch); persist(); renderAll(); toast("Imported ✔");
+  }catch(err){ toast("Invalid file"); } }; r.readAsText(f); e.target.value="";
+});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(confirm("Reset all names & settings?")){ state=defaultState(); persist(); renderAll(); toast("Reset done"); }
+});
+
+/* ---------- utils ---------- */
 let toastTimer;
-function toast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
-}
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
-}
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c])); }
 
+/* ---------- boot ---------- */
+if(cloudOn()){ setSync("syncing","Connecting…"); connectCloud(cloud); }
+else setSync("","Local only");
 renderAll();
 </script>
 </body>
