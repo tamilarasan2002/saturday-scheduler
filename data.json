@@ -1,0 +1,7 @@
+{
+  "updatedAt": "2026-07-24",
+  "startSaturday": "2026-07-25",
+  "startBatch": 1,
+  "batch1": ["Suriya", "Karthik", "Divya"],
+  "batch2": ["Arun", "Priya", "Vishnu"]
+}

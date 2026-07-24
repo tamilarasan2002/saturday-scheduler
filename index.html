@@ -19,6 +19,7 @@
     color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); }
+  code { background: rgba(255,255,255,.08); padding:1px 5px; border-radius:5px; font-size:.9em; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
 
   header.top {
@@ -34,7 +35,6 @@
   header.top p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
   .spacer { flex: 1; }
 
-  /* sync badge */
   .sync-badge { display:inline-flex; align-items:center; gap:7px; font-size:12px;
     padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card2); color:var(--muted); cursor:pointer;}
   .sync-badge .sd { width:9px; height:9px; border-radius:50%; background:var(--off);}
@@ -80,8 +80,8 @@
   .cal-cell.out { opacity:.32; }
   .cal-cell.today { outline:2px solid var(--accent); outline-offset:-2px; }
   .cal-cell .num { font-weight:600; }
-  .cal-cell.sat-b1 { background: linear-gradient(180deg, rgba(56,189,248,.22), rgba(56,189,248,.05)); border-color: rgba(56,189,248,.5);}
-  .cal-cell.sat-b2 { background: linear-gradient(180deg, rgba(244,114,182,.22), rgba(244,114,182,.05)); border-color: rgba(244,114,182,.5);}
+  .cal-cell.sat-b1 { background: linear-gradient(180deg, rgba(56,189,248,.22), rgba(56,189,248,.05)); border-color: rgba(56,189,248,.5); cursor:pointer;}
+  .cal-cell.sat-b2 { background: linear-gradient(180deg, rgba(244,114,182,.22), rgba(244,114,182,.05)); border-color: rgba(244,114,182,.5); cursor:pointer;}
   .cal-tag { position:absolute; left:5px; right:5px; bottom:5px; font-size:9.5px; font-weight:700; letter-spacing:.3px; text-align:center; padding:2px; border-radius:6px;}
   .cal-tag.b1 { background: var(--b1d); color:#04283a;} .cal-tag.b2 { background: var(--b2d); color:#3a0420;}
 
@@ -96,8 +96,10 @@
   .member-list li button { background:transparent; border:none; color:var(--off); cursor:pointer; font-size:15px; line-height:1; padding:2px 5px; border-radius:6px;}
   .member-list li button:hover { color:#f87171; background:rgba(248,113,113,.12);}
   .add-row { display:flex; gap:6px;}
-  input[type="text"], input[type="date"], input[type="url"], input[type="password"], select {
+  input[type="text"], input[type="date"] {
     background:var(--bg2); border:1px solid var(--line); color:var(--text);
+    padding:8px 11px; border-radius:9px; font-size:13px; width:100%; font-family:inherit; }
+  select { background:var(--bg2); border:1px solid var(--line); color:var(--text);
     padding:8px 11px; border-radius:9px; font-size:13px; width:100%; font-family:inherit; }
   input:focus, select:focus { outline:none; border-color:var(--accent);}
   button.btn { background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; border:none;
@@ -114,16 +116,25 @@
   .footer-note { color:var(--muted); font-size:12px; text-align:center; margin-top:8px;}
   details.setup { border:1px dashed var(--line); border-radius:10px; padding:10px 12px; margin-top:10px; font-size:12.5px; color:var(--muted);}
   details.setup summary { cursor:pointer; color:var(--text); font-weight:600;}
-  details.setup pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:11.5px; color:#cdd6ff;}
+  details.setup pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; overflow:auto; font-size:11.5px; color:#cdd6ff; white-space:pre-wrap;}
   .hint { font-size:11.5px; color:var(--muted); margin-top:6px;}
-  .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:var(--card2); border:1px solid var(--line); color:var(--text);
-    padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow);
-    opacity:0; pointer-events:none; transition:all .25s; z-index:50;}
-  .toast.show { opacity:1; transform:translateX(-50%) translateY(0);}
   .banner-info { background:rgba(251,191,36,.10); border:1px solid rgba(251,191,36,.35); color:#fde68a;
     padding:10px 14px; border-radius:10px; font-size:12.5px; margin-bottom:16px; }
   .banner-info b{ color:#fff;}
+  body:not(.admin) .admin-only { display:none !important; }
+
+  .caltip { position:fixed; z-index:60; max-width:250px; background:var(--card2); border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; box-shadow:var(--shadow); font-size:12.5px; pointer-events:none;
+    opacity:0; transition:opacity .12s; }
+  .caltip.show { opacity:1; }
+  .caltip .tt-h { font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+  .caltip .tt-date { color:var(--muted); font-size:11px; margin-bottom:7px; }
+  .caltip .tt-names { display:flex; flex-wrap:wrap; gap:5px; }
+  .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--card2); border:1px solid var(--line); color:var(--text);
+    padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow);
+    opacity:0; pointer-events:none; transition:all .25s; z-index:70;}
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -135,17 +146,15 @@
       <p>Batch 1 & Batch 2 — who works this Saturday, who is off.</p>
     </div>
     <div class="spacer"></div>
-    <div class="sync-badge" id="syncBadge" title="Cloud sync status — click to open setup">
-      <span class="sd"></span><span id="syncText">Local only</span>
+    <button class="btn ghost tiny" id="adminBtn" style="margin-right:8px;">🔒 Admin</button>
+    <div class="sync-badge" id="syncBadge" title="Live sync status">
+      <span class="sd"></span><span id="syncText">…</span>
     </div>
   </header>
 
-  <div class="banner-info" id="localWarn">
-    ⚠️ <b>Local only mode:</b> data is saved on <b>this device only</b> and will NOT sync to teammates.
-    Set up free <b>Cloud Sync</b> (below) so everyone sees the same data.
-  </div>
+  <div class="banner-info" id="localWarn"></div>
 
-  <!-- THIS WEEK -->
+  <!-- SUMMARY -->
   <div class="card">
     <h2>Saturday summary</h2>
     <div class="weeknav">
@@ -172,7 +181,7 @@
     <!-- CALENDAR -->
     <div class="card">
       <h2>Calendar</h2>
-      <p class="sub">Each Saturday is coloured by the batch that works that day.</p>
+      <p class="sub">Each Saturday is coloured by the batch on duty. Hover (or tap) a Saturday to see who works.</p>
       <div class="cal-head">
         <button class="icon-btn" id="prevMonth">‹</button>
         <div class="month" id="calMonth">—</div>
@@ -190,7 +199,7 @@
 
     <div>
       <!-- ROTATION -->
-      <div class="card">
+      <div class="card admin-only">
         <h2>Rotation setup</h2>
         <p class="sub">Pick any Saturday and which batch works — the rest alternate automatically.</p>
         <div class="row2">
@@ -205,47 +214,46 @@
       <!-- MEMBERS -->
       <div class="card">
         <h2>Team members</h2>
-        <p class="sub">Add names to each batch. Click ✎ to edit, double-click a name to move batch.</p>
+        <p class="sub">Members of each batch. <span class="admin-only">Click ✎ to edit, double-click a name to move batch.</span><span id="viewNote" style="display:none">Unlock <b>Admin</b> (top right) to add / edit members.</span></p>
         <div class="batch-cols">
           <div class="batch-panel">
             <h3><span class="dot b1"></span> Batch 1</h3>
             <p class="count" id="b1Count">0 members</p>
             <ul class="member-list" id="b1List"></ul>
-            <div class="add-row"><input type="text" id="b1Input" placeholder="Add name…" />
+            <div class="add-row admin-only"><input type="text" id="b1Input" placeholder="Add name…" />
               <button class="btn" data-add="1">Add</button></div>
           </div>
           <div class="batch-panel">
             <h3><span class="dot b2"></span> Batch 2</h3>
             <p class="count" id="b2Count">0 members</p>
             <ul class="member-list" id="b2List"></ul>
-            <div class="add-row"><input type="text" id="b2Input" placeholder="Add name…" />
+            <div class="add-row admin-only"><input type="text" id="b2Input" placeholder="Add name…" />
               <button class="btn" data-add="2">Add</button></div>
           </div>
         </div>
       </div>
 
-      <!-- CLOUD SYNC -->
-      <div class="card">
-        <h2>☁️ Cloud Sync <span style="font-size:12px;color:var(--muted);font-weight:400;">(free · shared)</span></h2>
-        <p class="sub">Connect a free Supabase project so all teammates see the same live data.</p>
-        <div class="field"><label>Supabase Project URL</label>
-          <input type="url" id="cfgUrl" placeholder="https://xxxx.supabase.co" /></div>
-        <div class="field"><label>Anon public API key</label>
-          <input type="password" id="cfgKey" placeholder="eyJhbGciOi…" /></div>
-        <div class="field"><label>Team ID (share the same value with your team)</label>
-          <input type="text" id="cfgTeam" placeholder="main" /></div>
+      <!-- PUBLISH (admin) -->
+      <div class="card admin-only">
+        <h2>📢 Publish to team <span style="font-size:12px;color:var(--muted);font-weight:400;">(admin)</span></h2>
+        <p class="sub">Edit here, then click <b>Publish</b> — the change goes live to everyone instantly. No git push, no redeploy.</p>
+        <p class="hint" id="pubInfo">—</p>
         <div class="chips">
-          <button class="btn tiny" id="connectBtn">Connect & Sync</button>
-          <button class="btn ghost tiny" id="shareLinkBtn">🔗 Copy team link</button>
-          <button class="btn ghost tiny" id="disconnectBtn">Disconnect</button>
+          <button class="btn tiny" id="saveBtn">💾 Publish (go live)</button>
+          <button class="btn ghost tiny" id="reloadShared">🔄 Refresh</button>
+          <button class="btn ghost tiny" id="downloadData">⬇ Download backup</button>
         </div>
-        <p class="hint" id="cloudHint">Not connected. Fill the fields above, or open a team link a colleague shared.</p>
-        <details class="setup">
-          <summary>How to get these (2 min, free)</summary>
+      </div>
+
+      <!-- CLOUD SETUP (shown only when not connected) -->
+      <div class="card" id="setupCard" style="display:none">
+        <h2>☁️ Connect cloud (one-time)</h2>
+        <p class="sub">Live sharing needs a free Supabase project. Once connected, everyone who opens this site sees the same live data.</p>
+        <details class="setup" open>
+          <summary>Setup steps (2 min, free)</summary>
           <ol style="padding-left:18px; line-height:1.7;">
-            <li>Create a free account at <a href="https://supabase.com" target="_blank">supabase.com</a> → New project.</li>
-            <li>Project → <b>Settings → API</b>: copy the <b>Project URL</b> and the <b>anon public</b> key into the fields above.</li>
-            <li>Open <b>SQL Editor</b> → New query → paste &amp; run this:</li>
+            <li>Create a free account at <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a> → New project.</li>
+            <li>Project → <b>SQL Editor</b> → run:</li>
           </ol>
           <pre>create table if not exists app_state (
   id text primary key,
@@ -253,49 +261,50 @@
   updated_at timestamptz default now()
 );
 alter table app_state enable row level security;
-create policy "team read"  on app_state for select using (true);
-create policy "team write" on app_state for insert with check (true);
-create policy "team update" on app_state for update using (true);</pre>
-          <p>Then click <b>Connect &amp; Sync</b>. Share the <b>team link</b> with colleagues — they open it and instantly see the same data. (The anon key is safe to share within your team for this internal tool.)</p>
+create policy "read"   on app_state for select using (true);
+create policy "insert" on app_state for insert with check (true);
+create policy "update" on app_state for update using (true);</pre>
+          <ol start="3" style="padding-left:18px; line-height:1.7;">
+            <li>Project → <b>Settings → API</b> → copy the <b>Project URL</b> and <b>anon public</b> key.</li>
+            <li>Give them to your developer to paste into the top of <code>index.html</code> (SUPABASE_URL, SUPABASE_KEY), then deploy once.</li>
+          </ol>
         </details>
-      </div>
-
-      <!-- BACKUP -->
-      <div class="card">
-        <h2>Backup</h2>
-        <p class="sub">Export / import the setup as a file.</p>
-        <div class="chips">
-          <button class="btn ghost tiny" id="exportBtn">⬇ Export JSON</button>
-          <button class="btn ghost tiny" id="importBtn">⬆ Import JSON</button>
-          <button class="btn ghost tiny" id="resetBtn">↺ Reset</button>
-          <input type="file" id="importFile" accept="application/json" style="display:none" />
-        </div>
       </div>
     </div>
   </div>
 
-  <p class="footer-note">Runs fully static · deployable free on Netlify · optional free cloud sync.</p>
+  <p class="footer-note">Static site + free Supabase cloud · admin edits publish live to everyone.</p>
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="caltip" id="calTip"></div>
 
 <script>
 "use strict";
-const LS_KEY = "altSaturday.v1";
-const CFG_KEY = "altSaturday.cloud";
+/* ===== CONFIG — fill these to enable live cloud sync ===== */
+const SUPABASE_URL = "https://oruwywrntwaznwrkcjxj.supabase.co";   // Supabase project URL
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ydXd5d3JudHdhem53cmtjanhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MDgxNjQsImV4cCI6MjEwMDQ4NDE2NH0.w5q_iQsuJHAO_Nd2Gkxp7M06euGFWHnTBsIxwcsr_IQ";   // anon public key (browser-safe)
+const TEAM_ID      = "main";
+const ADMIN_CODE   = "batch2026";   // 🔑 change to your own secret passcode
+/* ========================================================= */
+
+const SHARED_URL = "data.json";
 const MS_DAY = 86400000;
 
-/* ---------- state ---------- */
+let state = defaultState();
+let selectedDate = null;
+let viewYear, viewMonth;
+let sharedUpdatedAt = null;
+let admin = false;
+let dirty = false;
+let lastStamp = 0, saving = false, pollTimer = null;
+initView();
+
+/* ---------- default ---------- */
 function defaultState(){
   return { batches:{ "1":{name:"Batch 1",members:[]}, "2":{name:"Batch 2",members:[]} },
            anchorDate: nextSaturdayISO(), anchorBatch:"1" };
 }
-let state = loadLocal();
-let cloud = loadCloudCfg();     // {url,key,team} or null
-let selectedDate = null;        // for the summary date picker
-let viewYear, viewMonth;
-let pollTimer = null, lastRemoteStamp = 0, saving = false;
-initView();
 
 /* ---------- date helpers ---------- */
 function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -313,103 +322,113 @@ function workingBatchFor(dateObj){
   return even?base:other;
 }
 
-/* ---------- local persistence ---------- */
-function saveLocal(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function loadLocal(){
-  try{ const raw=localStorage.getItem(LS_KEY); if(!raw) return defaultState();
-    const s=JSON.parse(raw); if(!s.batches||!s.batches["1"]||!s.batches["2"]) return defaultState();
-    s.anchorBatch=String(s.anchorBatch); return s;
-  }catch(e){ return defaultState(); }
+/* ---------- data shape ---------- */
+function toSimple(){
+  return { updatedAt: ymd(new Date()), startSaturday: state.anchorDate, startBatch: Number(state.anchorBatch),
+    batch1: state.batches["1"].members.slice(), batch2: state.batches["2"].members.slice() };
 }
-function loadCloudCfg(){
-  // from URL hash (#cfg=base64) first — lets teammates auto-connect via shared link
-  try{
-    if(location.hash.startsWith("#cfg=")){
-      const c=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(5)))));
-      if(c.url&&c.key){ c.team=c.team||"main"; localStorage.setItem(CFG_KEY,JSON.stringify(c));
-        history.replaceState(null,"",location.pathname+location.search); return c; }
-    }
-  }catch(e){}
-  try{ const raw=localStorage.getItem(CFG_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+function applyShared(j){
+  if(Array.isArray(j.batch1)||Array.isArray(j.batch2)){
+    state.anchorDate = j.startSaturday || nextSaturdayISO();
+    state.anchorBatch = String(j.startBatch||"1");
+    state.batches = { "1":{name:"Batch 1",members:Array.isArray(j.batch1)?j.batch1:[]},
+                      "2":{name:"Batch 2",members:Array.isArray(j.batch2)?j.batch2:[]} };
+  } else if(j.batches){ state=j; state.anchorBatch=String(state.anchorBatch); }
+  else throw new Error("bad shape");
+  sharedUpdatedAt = j.updatedAt || null;
 }
 
 /* ---------- cloud (Supabase REST) ---------- */
-function cloudOn(){ return !!(cloud&&cloud.url&&cloud.key); }
-function restUrl(){ return cloud.url.replace(/\/$/,"")+"/rest/v1/app_state"; }
-function hdrs(extra){ return Object.assign({ apikey:cloud.key, Authorization:"Bearer "+cloud.key,
+function cloudOn(){ return !!(SUPABASE_URL && SUPABASE_KEY); }
+function restUrl(){ return SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/app_state"; }
+function hdrs(extra){ return Object.assign({ apikey:SUPABASE_KEY, Authorization:"Bearer "+SUPABASE_KEY,
   "Content-Type":"application/json" }, extra||{}); }
-
 async function cloudLoad(){
-  const r = await fetch(restUrl()+"?id=eq."+encodeURIComponent(cloud.team)+"&select=data,updated_at",
-    { headers: hdrs() });
+  const r=await fetch(restUrl()+"?id=eq."+encodeURIComponent(TEAM_ID)+"&select=data,updated_at",{headers:hdrs(),cache:"no-store"});
   if(!r.ok) throw new Error("load "+r.status);
-  const rows = await r.json();
-  return rows[0] || null;
+  const rows=await r.json(); return rows[0]||null;
 }
 async function cloudSave(){
-  const body = [{ id: cloud.team, data: state, updated_at: new Date().toISOString() }];
-  const r = await fetch(restUrl(), { method:"POST",
-    headers: hdrs({ Prefer:"resolution=merge-duplicates,return=representation" }),
-    body: JSON.stringify(body) });
+  const body=[{ id:TEAM_ID, data:toSimple(), updated_at:new Date().toISOString() }];
+  const r=await fetch(restUrl(),{ method:"POST",
+    headers:hdrs({ Prefer:"resolution=merge-duplicates,return=representation" }), body:JSON.stringify(body) });
   if(!r.ok) throw new Error("save "+r.status);
-  const rows = await r.json();
-  if(rows[0]&&rows[0].updated_at) lastRemoteStamp = Date.parse(rows[0].updated_at);
-}
-
-function setSync(status, text){
-  const b=document.getElementById("syncBadge");
-  b.className="sync-badge"+(status?" "+status:"");
-  document.getElementById("syncText").textContent=text;
-  document.getElementById("localWarn").style.display = cloudOn()?"none":"";
-}
-
-let saveTimer=null;
-function persist(){                 // called on every change
-  saveLocal();
-  if(cloudOn()){
-    setSync("syncing","Saving…");
-    clearTimeout(saveTimer);
-    saveTimer=setTimeout(async()=>{
-      try{ saving=true; await cloudSave(); setSync("on","Synced ✓"); }
-      catch(e){ setSync("err","Sync error"); }
-      finally{ saving=false; }
-    },400);
-  }
-}
-
-async function connectCloud(cfg){
-  cloud=cfg; localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-  setSync("syncing","Connecting…");
-  try{
-    const row = await cloudLoad();
-    if(row){                        // adopt existing team data
-      state=row.data; state.anchorBatch=String(state.anchorBatch);
-      lastRemoteStamp=Date.parse(row.updated_at); saveLocal();
-    }else{                          // seed the team with our local data
-      await cloudSave();
-    }
-    setSync("on","Synced ✓"); renderAll(); startPolling(); toast("Cloud connected ✓");
-  }catch(e){
-    setSync("err","Connect failed"); toast("Connect failed — check URL/key & SQL setup");
-  }
+  const rows=await r.json(); if(rows[0]&&rows[0].updated_at) lastStamp=Date.parse(rows[0].updated_at);
 }
 function startPolling(){
   if(pollTimer) clearInterval(pollTimer);
   if(!cloudOn()) return;
   pollTimer=setInterval(async()=>{
-    if(saving) return;
-    try{
-      const row=await cloudLoad();
-      if(row){
-        const st=Date.parse(row.updated_at);
-        if(st>lastRemoteStamp){       // a teammate changed it
-          lastRemoteStamp=st; state=row.data; state.anchorBatch=String(state.anchorBatch);
-          saveLocal(); renderAll(); setSync("on","Updated from team ✓");
-        }
-      }
-    }catch(e){ setSync("err","Sync error"); }
-  }, 8000);
+    if(saving||dirty) return;             // don't clobber unpublished local edits
+    try{ const row=await cloudLoad();
+      if(row){ const st=Date.parse(row.updated_at);
+        if(st>lastStamp){ lastStamp=st; applyShared(row.data); renderAll(); setSync("on","Updated from team ✓"); } } }
+    catch(e){ setSync("err","Sync error"); }
+  },6000);
 }
+
+/* ---------- data.json fallback (when cloud not configured) ---------- */
+async function loadSharedJson(){
+  try{ const r=await fetch(SHARED_URL,{cache:"no-store"}); if(!r.ok) throw 0; applyShared(await r.json()); }
+  catch(e){ sharedUpdatedAt=null; }
+}
+
+/* ---------- save / publish ---------- */
+async function onSave(){
+  if(!requireAdmin()) return;
+  if(cloudOn()){
+    setSync("syncing","Publishing…");
+    try{ saving=true; await cloudSave(); dirty=false; setSync("on","Published ✓"); setBanner(); toast("Published live to team ✓"); }
+    catch(e){ setSync("err","Publish failed"); toast("Publish failed — check connection"); }
+    finally{ saving=false; }
+  } else {
+    downloadData(); // no cloud → offer a backup download instead
+    toast("Cloud not set up — downloaded a backup instead");
+  }
+}
+async function refreshNow(){
+  if(cloudOn()){
+    try{ const row=await cloudLoad(); if(row){ lastStamp=Date.parse(row.updated_at); applyShared(row.data); } setSync("on","Live ✓"); }
+    catch(e){ setSync("err","Sync error"); }
+  } else { await loadSharedJson(); }
+  dirty=false; renderAll(); setBanner(); toast("Refreshed");
+}
+function downloadData(){
+  const blob=new Blob([JSON.stringify(toSimple(),null,2)+"\n"],{type:"application/json"});
+  const u=URL.createObjectURL(blob); const a=document.createElement("a");
+  a.href=u; a.download="data.json"; a.click(); URL.revokeObjectURL(u);
+}
+
+/* ---------- status / banner ---------- */
+function setSync(status, text){
+  const b=document.getElementById("syncBadge");
+  b.className="sync-badge"+(status?" "+status:"");
+  document.getElementById("syncText").textContent=text;
+}
+function setBanner(){
+  const el=document.getElementById("localWarn");
+  const setup=document.getElementById("setupCard");
+  if(!cloudOn()){
+    if(setup) setup.style.display = admin ? "" : "none";
+    if(el){ el.style.display="";
+      el.innerHTML='⚙️ <b>Cloud not connected</b> — showing <code>data.json</code> (view only). '+
+        (admin?'Connect a free Supabase project (card below) for live team sharing.':'Ask your admin to finish cloud setup for live updates.'); }
+  } else {
+    if(setup) setup.style.display="none";
+    if(el){ el.style.display="";
+      if(dirty && admin){ el.innerHTML='⚠️ <b>Unpublished changes</b> — click <b>💾 Publish</b> to push them live to everyone.'; }
+      else if(admin){ el.innerHTML='🟢 <b>Live.</b> Edit anything, then click <b>Publish</b> — the whole team sees it within seconds. No redeploy.'; }
+      else { el.innerHTML='🟢 <b>Live view</b> — this schedule updates automatically'+(sharedUpdatedAt?(' · updated <b>'+escapeHtml(sharedUpdatedAt)+'</b>'):'')+'.'; }
+    }
+  }
+  const pi=document.getElementById("pubInfo");
+  if(pi) pi.textContent = !cloudOn() ? "Cloud not set up — Publish will download a backup."
+    : dirty ? "Unpublished changes — click 💾 Publish to go live."
+    : "Team “"+TEAM_ID+"” · live. Edits publish instantly to everyone.";
+}
+
+/* ---------- change hook ---------- */
+function persist(){ dirty=true; if(cloudOn()) setSync("syncing","Unpublished"); setBanner(); }
 
 /* ---------- rendering ---------- */
 function initView(){ const t=new Date(); viewYear=t.getFullYear(); viewMonth=t.getMonth(); }
@@ -417,12 +436,6 @@ function renderAll(){ renderSummary(); renderCalendar(); renderMembers(); render
 function syncInputs(){
   document.getElementById("anchorDate").value=state.anchorDate;
   document.getElementById("anchorBatch").value=state.anchorBatch;
-  if(cloud){ document.getElementById("cfgUrl").value=cloud.url||"";
-    document.getElementById("cfgKey").value=cloud.key||"";
-    document.getElementById("cfgTeam").value=cloud.team||"main"; }
-  document.getElementById("cloudHint").textContent = cloudOn()
-    ? ("Connected · Team “"+cloud.team+"”. Share the team link so colleagues sync automatically.")
-    : "Not connected. Fill the fields above, or open a team link a colleague shared.";
 }
 function fmtLong(d){ return d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"}); }
 
@@ -457,13 +470,21 @@ function renderCalendar(){
     const cell=document.createElement("div"); cell.className="cal-cell";
     if(d.getMonth()!==viewMonth) cell.classList.add("out");
     if(daysBetween(d,today)===0) cell.classList.add("today");
-    let tag="";
+    let tag="", satBatch=null;
     if(isSaturday(d)){
-      const wb=workingBatchFor(d); cell.classList.add(wb==="1"?"sat-b1":"sat-b2");
-      tag='<div class="cal-tag b'+wb+'">'+escapeHtml(shortLabel(state.batches[wb].name))+'</div>';
-      if(highlight){ const pb=highlight.split("::")[0]; if(pb!==wb) cell.style.opacity="0.28"; }
+      satBatch=workingBatchFor(d); cell.classList.add(satBatch==="1"?"sat-b1":"sat-b2");
+      tag='<div class="cal-tag b'+satBatch+'">'+escapeHtml(shortLabel(state.batches[satBatch].name))+'</div>';
+      if(highlight){ const pb=highlight.split("::")[0]; if(pb!==satBatch) cell.style.opacity="0.28"; }
     }
-    cell.innerHTML='<div class="num">'+d.getDate()+'</div>'+tag; grid.appendChild(cell);
+    cell.innerHTML='<div class="num">'+d.getDate()+'</div>'+tag;
+    if(satBatch){
+      const dd=new Date(d.getFullYear(),d.getMonth(),d.getDate()), bb=satBatch;
+      cell.addEventListener("mouseenter",e=>showTip(e,dd,bb));
+      cell.addEventListener("mousemove",moveTip);
+      cell.addEventListener("mouseleave",hideTip);
+      cell.addEventListener("click",()=>{ selectedDate=dd; document.getElementById("weekPick").value=ymd(dd); renderSummary(); hideTip(); });
+    }
+    grid.appendChild(cell);
   }
 }
 function shortLabel(n){ return n.length>10?n.slice(0,9)+"…":n; }
@@ -475,11 +496,13 @@ function renderMembers(){
     members.forEach((n,idx)=>{
       const li=document.createElement("li");
       li.innerHTML='<span class="dot b'+b+'"></span><span class="nm">'+escapeHtml(n)+'</span>'+
-        '<button class="edit" title="Edit">✎</button><button class="del" title="Remove">&times;</button>';
-      li.querySelector(".nm").title="Double-click to move to other batch";
-      li.querySelector(".nm").addEventListener("dblclick",()=>moveMember(b,idx));
-      li.querySelector(".edit").addEventListener("click",()=>editMember(b,idx));
-      li.querySelector(".del").addEventListener("click",()=>removeMember(b,idx));
+        (admin?'<button class="edit" title="Edit">✎</button><button class="del" title="Remove">&times;</button>':'');
+      if(admin){
+        li.querySelector(".nm").title="Double-click to move to other batch";
+        li.querySelector(".nm").addEventListener("dblclick",()=>moveMember(b,idx));
+        li.querySelector(".edit").addEventListener("click",()=>editMember(b,idx));
+        li.querySelector(".del").addEventListener("click",()=>removeMember(b,idx));
+      }
       list.appendChild(li);
     });
   });
@@ -493,76 +516,78 @@ function renderLookup(){
   if([...sel.options].some(o=>o.value===prev)) sel.value=prev;
 }
 
-/* ---------- actions ---------- */
+/* ---------- calendar tooltip ---------- */
+let tipEl=null;
+function tipHtml(dateObj,batch){
+  const m=state.batches[batch].members;
+  const names=m.length
+    ? '<div class="tt-names">'+m.map(n=>'<span class="chip small"><span class="dot b'+batch+'"></span>'+escapeHtml(n)+'</span>').join('')+'</div>'
+    : '<span class="empty-note">No members</span>';
+  return '<div class="tt-h"><span class="dot b'+batch+'"></span>'+escapeHtml(state.batches[batch].name)+' working</div>'+
+         '<div class="tt-date">'+fmtLong(dateObj)+'</div>'+names;
+}
+function showTip(e,dateObj,batch){ tipEl=document.getElementById("calTip"); tipEl.innerHTML=tipHtml(dateObj,batch); tipEl.classList.add("show"); moveTip(e); }
+function moveTip(e){ if(!tipEl) return; const pad=14,w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let x=e.clientX+pad,y=e.clientY+pad; if(x+w>innerWidth)x=e.clientX-w-pad; if(y+h>innerHeight)y=e.clientY-h-pad;
+  tipEl.style.left=Math.max(6,x)+"px"; tipEl.style.top=Math.max(6,y)+"px"; }
+function hideTip(){ if(tipEl) tipEl.classList.remove("show"); }
+
+/* ---------- actions (admin only) ---------- */
+function requireAdmin(){ if(!admin){ toast("🔒 Only the admin can edit — click “Admin” to unlock"); return false; } return true; }
 function addMember(b){
+  if(!requireAdmin()) return;
   const inp=document.getElementById("b"+b+"Input"), name=inp.value.trim(); if(!name) return;
   if(nameExists(name)){ toast("“"+name+"” already exists"); return; }
-  state.batches[b].members.push(name); inp.value=""; persist(); renderAll(); toast("Added "+name);
+  state.batches[b].members.push(name); inp.value=""; persist(); renderAll(); toast("Added "+name+" — click Publish");
 }
-function removeMember(b,idx){ const n=state.batches[b].members[idx];
-  state.batches[b].members.splice(idx,1); persist(); renderAll(); toast("Removed "+n); }
-function moveMember(from,idx){ const to=from==="1"?"2":"1";
+function removeMember(b,idx){ if(!requireAdmin()) return; const n=state.batches[b].members[idx];
+  state.batches[b].members.splice(idx,1); persist(); renderAll(); toast("Removed "+n+" — click Publish"); }
+function moveMember(from,idx){ if(!requireAdmin()) return; const to=from==="1"?"2":"1";
   const n=state.batches[from].members.splice(idx,1)[0]; state.batches[to].members.push(n);
-  persist(); renderAll(); toast(n+" → "+state.batches[to].name); }
+  persist(); renderAll(); toast(n+" → "+state.batches[to].name+" — click Publish"); }
 function editMember(b,idx){
+  if(!requireAdmin()) return;
   const cur=state.batches[b].members[idx]; const nn=prompt("Edit name:",cur); if(nn===null) return;
   const name=nn.trim(); if(!name) return;
   if(name.toLowerCase()!==cur.toLowerCase() && nameExists(name)){ toast("Name already exists"); return; }
-  state.batches[b].members[idx]=name; persist(); renderAll(); toast("Updated");
+  state.batches[b].members[idx]=name; persist(); renderAll(); toast("Updated — click Publish");
 }
 function nameExists(name){ return ["1","2"].some(x=>state.batches[x].members.some(m=>m.toLowerCase()===name.toLowerCase())); }
+function applyAdmin(){
+  document.body.classList.toggle("admin", admin);
+  const b=document.getElementById("adminBtn");
+  if(b) b.textContent = admin ? "🔓 Admin — lock" : "🔒 Admin";
+  const vn=document.getElementById("viewNote"); if(vn) vn.style.display = admin ? "none" : "";
+  setBanner(); renderMembers();
+}
+function toggleAdmin(){
+  if(admin){ admin=false; sessionStorage.removeItem("altsat.admin"); applyAdmin(); toast("Locked — view only"); return; }
+  const c=prompt("Enter admin passcode:"); if(c===null) return;
+  if(c===ADMIN_CODE){ admin=true; sessionStorage.setItem("altsat.admin","1"); applyAdmin(); toast("Admin unlocked ✓"); }
+  else toast("Wrong passcode");
+}
 
 /* ---------- wire up ---------- */
 document.querySelectorAll("[data-add]").forEach(btn=>btn.addEventListener("click",()=>addMember(btn.getAttribute("data-add"))));
 ["1","2"].forEach(b=>document.getElementById("b"+b+"Input").addEventListener("keydown",e=>{ if(e.key==="Enter") addMember(b); }));
+document.getElementById("adminBtn").addEventListener("click",toggleAdmin);
 document.getElementById("saveAnchor").addEventListener("click",()=>{
+  if(!requireAdmin()) return;
   const v=document.getElementById("anchorDate").value; if(!v){ toast("Pick a date"); return; }
   const d=parseISO(v);
   if(!isSaturday(d)){ const s=saturdayOfWeek(d); state.anchorDate=ymd(s); toast("Snapped to Saturday "+ymd(s)); }
   else state.anchorDate=ymd(d);
-  state.anchorBatch=document.getElementById("anchorBatch").value; persist(); renderAll(); toast("Rotation saved");
+  state.anchorBatch=document.getElementById("anchorBatch").value; persist(); renderAll(); toast("Rotation set — click Publish");
 });
 document.getElementById("prevMonth").addEventListener("click",()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
 document.getElementById("nextMonth").addEventListener("click",()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
 document.getElementById("thisSatBtn").addEventListener("click",()=>{ selectedDate=null; document.getElementById("weekPick").value=""; renderSummary(); });
 document.getElementById("weekPick").addEventListener("change",e=>{ selectedDate=e.target.value?parseISO(e.target.value):null; renderSummary(); });
 document.getElementById("lookupSelect").addEventListener("change",renderCalendar);
-document.getElementById("syncBadge").addEventListener("click",()=>document.getElementById("cfgUrl").scrollIntoView({behavior:"smooth",block:"center"}));
-
-document.getElementById("connectBtn").addEventListener("click",()=>{
-  const url=document.getElementById("cfgUrl").value.trim();
-  const key=document.getElementById("cfgKey").value.trim();
-  const team=(document.getElementById("cfgTeam").value.trim())||"main";
-  if(!url||!key){ toast("Enter URL and key"); return; }
-  connectCloud({url,key,team});
-});
-document.getElementById("disconnectBtn").addEventListener("click",()=>{
-  cloud=null; localStorage.removeItem(CFG_KEY); if(pollTimer) clearInterval(pollTimer);
-  setSync("","Local only"); syncInputs(); toast("Disconnected (local only)");
-});
-document.getElementById("shareLinkBtn").addEventListener("click",()=>{
-  if(!cloudOn()){ toast("Connect first"); return; }
-  const payload=btoa(unescape(encodeURIComponent(JSON.stringify(cloud))));
-  const link=location.origin+location.pathname+"#cfg="+payload;
-  navigator.clipboard.writeText(link).then(()=>toast("Team link copied ✓"),()=>prompt("Copy this link:",link));
-});
-
-document.getElementById("exportBtn").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const u=URL.createObjectURL(blob); const a=document.createElement("a");
-  a.href=u; a.download="alternate-saturday-setup.json"; a.click(); URL.revokeObjectURL(u);
-});
-document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change",e=>{
-  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ const s=JSON.parse(r.result);
-    if(!s.batches||!s.batches["1"]||!s.batches["2"]) throw 0;
-    state=s; state.anchorBatch=String(state.anchorBatch); persist(); renderAll(); toast("Imported ✔");
-  }catch(err){ toast("Invalid file"); } }; r.readAsText(f); e.target.value="";
-});
-document.getElementById("resetBtn").addEventListener("click",()=>{
-  if(confirm("Reset all names & settings?")){ state=defaultState(); persist(); renderAll(); toast("Reset done"); }
-});
+document.getElementById("syncBadge").addEventListener("click",refreshNow);
+document.getElementById("saveBtn").addEventListener("click",onSave);
+document.getElementById("reloadShared").addEventListener("click",refreshNow);
+document.getElementById("downloadData").addEventListener("click",downloadData);
 
 /* ---------- utils ---------- */
 let toastTimer;
@@ -571,9 +596,21 @@ function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c])); }
 
 /* ---------- boot ---------- */
-if(cloudOn()){ setSync("syncing","Connecting…"); connectCloud(cloud); }
-else setSync("","Local only");
-renderAll();
+(async function boot(){
+  admin = sessionStorage.getItem("altsat.admin")==="1";
+  if(cloudOn()){
+    setSync("syncing","Connecting…");
+    try{
+      const row=await cloudLoad();
+      if(row){ applyShared(row.data); lastStamp=Date.parse(row.updated_at); setSync("on","Live ✓"); }
+      else { await loadSharedJson(); if(admin){ try{ await cloudSave(); }catch(_){} } setSync("on","Live ✓"); }
+      startPolling();
+    }catch(e){ setSync("err","Cloud error"); await loadSharedJson(); }
+  } else {
+    setSync("","Not connected"); await loadSharedJson();
+  }
+  setBanner(); renderAll(); applyAdmin();
+})();
 </script>
 </body>
 </html>
