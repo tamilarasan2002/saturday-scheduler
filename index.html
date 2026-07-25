@@ -130,6 +130,21 @@
   .caltip .tt-h { font-weight:700; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
   .caltip .tt-date { color:var(--muted); font-size:11px; margin-bottom:7px; }
   .caltip .tt-names { display:flex; flex-wrap:wrap; gap:5px; }
+  #saveBtn { transition:filter .15s, box-shadow .15s; }
+  #saveBtn.unsaved { box-shadow:0 0 0 2px var(--warn), 0 0 14px rgba(251,191,36,.5); }
+  #saveBtn.saved { opacity:.55; background:var(--card2); border:1px solid var(--line); }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(6,8,18,.66); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal-box { background:linear-gradient(180deg,var(--card),var(--bg2)); border:1px solid var(--line);
+    border-radius:16px; padding:22px; width:100%; max-width:390px; box-shadow:var(--shadow);
+    animation:pop .16s ease-out; }
+  @keyframes pop { from{ transform:scale(.94); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .modal-box .m-title { font-size:16px; font-weight:700; margin:0 0 10px; }
+  .modal-box .m-msg { color:var(--muted); font-size:13px; margin:0 0 14px; line-height:1.5; }
+  .modal-box input { margin-bottom:16px; padding:10px 12px; font-size:14px; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
   .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
     background:var(--card2); border:1px solid var(--line); color:var(--text);
     padding:10px 18px; border-radius:10px; font-size:13px; box-shadow:var(--shadow);
@@ -146,8 +161,9 @@
       <p>Batch 1 & Batch 2 — who works this Saturday, who is off.</p>
     </div>
     <div class="spacer"></div>
+    <button class="btn tiny admin-only" id="saveBtn" style="margin-right:8px;">💾 Save</button>
     <button class="btn ghost tiny" id="adminBtn" style="margin-right:8px;">🔒 Admin</button>
-    <div class="sync-badge" id="syncBadge" title="Live sync status">
+    <div class="sync-badge" id="syncBadge" title="Live sync status — click to refresh">
       <span class="sd"></span><span id="syncText">…</span>
     </div>
   </header>
@@ -233,18 +249,6 @@
         </div>
       </div>
 
-      <!-- PUBLISH (admin) -->
-      <div class="card admin-only">
-        <h2>📢 Publish to team <span style="font-size:12px;color:var(--muted);font-weight:400;">(admin)</span></h2>
-        <p class="sub">Edit here, then click <b>Publish</b> — the change goes live to everyone instantly. No git push, no redeploy.</p>
-        <p class="hint" id="pubInfo">—</p>
-        <div class="chips">
-          <button class="btn tiny" id="saveBtn">💾 Publish (go live)</button>
-          <button class="btn ghost tiny" id="reloadShared">🔄 Refresh</button>
-          <button class="btn ghost tiny" id="downloadData">⬇ Download backup</button>
-        </div>
-      </div>
-
       <!-- CLOUD SETUP (shown only when not connected) -->
       <div class="card" id="setupCard" style="display:none">
         <h2>☁️ Connect cloud (one-time)</h2>
@@ -278,6 +282,18 @@ create policy "update" on app_state for update using (true);</pre>
 
 <div class="toast" id="toast"></div>
 <div class="caltip" id="calTip"></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-msg" id="mMsg" style="display:none"></div>
+    <input type="text" id="mInput" style="display:none" />
+    <div class="modal-actions">
+      <button class="btn ghost tiny" id="mCancel">Cancel</button>
+      <button class="btn tiny" id="mOk">OK</button>
+    </div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -416,15 +432,14 @@ function setBanner(){
   } else {
     if(setup) setup.style.display="none";
     if(el){ el.style.display="";
-      if(dirty && admin){ el.innerHTML='⚠️ <b>Unpublished changes</b> — click <b>💾 Publish</b> to push them live to everyone.'; }
-      else if(admin){ el.innerHTML='🟢 <b>Live.</b> Edit anything, then click <b>Publish</b> — the whole team sees it within seconds. No redeploy.'; }
+      if(dirty && admin){ el.innerHTML='⚠️ <b>Unsaved changes</b> — click <b>💾 Save</b> (top right) to push them live to everyone.'; }
+      else if(admin){ el.innerHTML='🟢 <b>Live.</b> Edit anything, then click <b>💾 Save</b> — the whole team sees it within seconds. No redeploy.'; }
       else { el.innerHTML='🟢 <b>Live view</b> — this schedule updates automatically'+(sharedUpdatedAt?(' · updated <b>'+escapeHtml(sharedUpdatedAt)+'</b>'):'')+'.'; }
     }
   }
-  const pi=document.getElementById("pubInfo");
-  if(pi) pi.textContent = !cloudOn() ? "Cloud not set up — Publish will download a backup."
-    : dirty ? "Unpublished changes — click 💾 Publish to go live."
-    : "Team “"+TEAM_ID+"” · live. Edits publish instantly to everyone.";
+  const sb=document.getElementById("saveBtn");
+  if(sb){ sb.classList.toggle("unsaved", dirty && cloudOn()); sb.classList.toggle("saved", !dirty);
+    sb.textContent = dirty ? "💾 Save*" : "💾 Save"; }
 }
 
 /* ---------- change hook ---------- */
@@ -532,25 +547,48 @@ function moveTip(e){ if(!tipEl) return; const pad=14,w=tipEl.offsetWidth,h=tipEl
   tipEl.style.left=Math.max(6,x)+"px"; tipEl.style.top=Math.max(6,y)+"px"; }
 function hideTip(){ if(tipEl) tipEl.classList.remove("show"); }
 
+/* ---------- HTML modal (replaces prompt/confirm/alert) ---------- */
+function openModal(opts){
+  return new Promise(resolve=>{
+    const ov=document.getElementById("modal"), t=document.getElementById("mTitle"),
+      msg=document.getElementById("mMsg"), inp=document.getElementById("mInput"),
+      ok=document.getElementById("mOk"), cancel=document.getElementById("mCancel");
+    t.textContent=opts.title||"";
+    msg.style.display=opts.message?"":"none"; msg.textContent=opts.message||"";
+    if(opts.input){ inp.style.display=""; inp.type=opts.password?"password":"text"; inp.value=opts.value||""; inp.placeholder=opts.placeholder||""; }
+    else inp.style.display="none";
+    ok.textContent=opts.okText||"OK"; cancel.textContent=opts.cancelText||"Cancel";
+    ov.classList.add("show"); if(opts.input) setTimeout(()=>{ inp.focus(); inp.select(); },30);
+    function done(val){ ov.classList.remove("show"); ok.onclick=cancel.onclick=inp.onkeydown=ov.onclick=null; resolve(val); }
+    ok.onclick=()=>done(opts.input?inp.value:true);
+    cancel.onclick=()=>done(opts.input?null:false);
+    ov.onclick=e=>{ if(e.target===ov) done(opts.input?null:false); };
+    inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); ok.onclick(); } if(e.key==="Escape") cancel.onclick(); };
+  });
+}
+
 /* ---------- actions (admin only) ---------- */
 function requireAdmin(){ if(!admin){ toast("🔒 Only the admin can edit — click “Admin” to unlock"); return false; } return true; }
 function addMember(b){
   if(!requireAdmin()) return;
   const inp=document.getElementById("b"+b+"Input"), name=inp.value.trim(); if(!name) return;
   if(nameExists(name)){ toast("“"+name+"” already exists"); return; }
-  state.batches[b].members.push(name); inp.value=""; persist(); renderAll(); toast("Added "+name+" — click Publish");
+  state.batches[b].members.push(name); inp.value=""; persist(); renderAll(); toast("Added "+name+" — click 💾 Save");
 }
-function removeMember(b,idx){ if(!requireAdmin()) return; const n=state.batches[b].members[idx];
-  state.batches[b].members.splice(idx,1); persist(); renderAll(); toast("Removed "+n+" — click Publish"); }
+async function removeMember(b,idx){ if(!requireAdmin()) return; const n=state.batches[b].members[idx];
+  const ok=await openModal({title:"Remove member?", message:"Remove “"+n+"” from "+state.batches[b].name+"?", okText:"Remove"});
+  if(!ok) return;
+  state.batches[b].members.splice(idx,1); persist(); renderAll(); toast("Removed "+n+" — click 💾 Save"); }
 function moveMember(from,idx){ if(!requireAdmin()) return; const to=from==="1"?"2":"1";
   const n=state.batches[from].members.splice(idx,1)[0]; state.batches[to].members.push(n);
-  persist(); renderAll(); toast(n+" → "+state.batches[to].name+" — click Publish"); }
-function editMember(b,idx){
+  persist(); renderAll(); toast(n+" → "+state.batches[to].name+" — click 💾 Save"); }
+async function editMember(b,idx){
   if(!requireAdmin()) return;
-  const cur=state.batches[b].members[idx]; const nn=prompt("Edit name:",cur); if(nn===null) return;
-  const name=nn.trim(); if(!name) return;
+  const cur=state.batches[b].members[idx];
+  const nn=await openModal({title:"Edit name", input:true, value:cur, okText:"Save"});
+  if(nn===null) return; const name=nn.trim(); if(!name) return;
   if(name.toLowerCase()!==cur.toLowerCase() && nameExists(name)){ toast("Name already exists"); return; }
-  state.batches[b].members[idx]=name; persist(); renderAll(); toast("Updated — click Publish");
+  state.batches[b].members[idx]=name; persist(); renderAll(); toast("Updated — click 💾 Save");
 }
 function nameExists(name){ return ["1","2"].some(x=>state.batches[x].members.some(m=>m.toLowerCase()===name.toLowerCase())); }
 function applyAdmin(){
@@ -560,9 +598,10 @@ function applyAdmin(){
   const vn=document.getElementById("viewNote"); if(vn) vn.style.display = admin ? "none" : "";
   setBanner(); renderMembers();
 }
-function toggleAdmin(){
+async function toggleAdmin(){
   if(admin){ admin=false; sessionStorage.removeItem("altsat.admin"); applyAdmin(); toast("Locked — view only"); return; }
-  const c=prompt("Enter admin passcode:"); if(c===null) return;
+  const c=await openModal({title:"Admin login", message:"Enter the admin passcode to edit the schedule.", input:true, password:true, placeholder:"Passcode", okText:"Unlock"});
+  if(c===null) return;
   if(c===ADMIN_CODE){ admin=true; sessionStorage.setItem("altsat.admin","1"); applyAdmin(); toast("Admin unlocked ✓"); }
   else toast("Wrong passcode");
 }
@@ -577,7 +616,7 @@ document.getElementById("saveAnchor").addEventListener("click",()=>{
   const d=parseISO(v);
   if(!isSaturday(d)){ const s=saturdayOfWeek(d); state.anchorDate=ymd(s); toast("Snapped to Saturday "+ymd(s)); }
   else state.anchorDate=ymd(d);
-  state.anchorBatch=document.getElementById("anchorBatch").value; persist(); renderAll(); toast("Rotation set — click Publish");
+  state.anchorBatch=document.getElementById("anchorBatch").value; persist(); renderAll(); toast("Rotation set — click 💾 Save");
 });
 document.getElementById("prevMonth").addEventListener("click",()=>{ viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} renderCalendar(); });
 document.getElementById("nextMonth").addEventListener("click",()=>{ viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} renderCalendar(); });
@@ -586,8 +625,6 @@ document.getElementById("weekPick").addEventListener("change",e=>{ selectedDate=
 document.getElementById("lookupSelect").addEventListener("change",renderCalendar);
 document.getElementById("syncBadge").addEventListener("click",refreshNow);
 document.getElementById("saveBtn").addEventListener("click",onSave);
-document.getElementById("reloadShared").addEventListener("click",refreshNow);
-document.getElementById("downloadData").addEventListener("click",downloadData);
 
 /* ---------- utils ---------- */
 let toastTimer;
