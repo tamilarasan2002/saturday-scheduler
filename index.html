@@ -165,7 +165,7 @@
     <div class="spacer"></div>
     <button class="btn tiny admin-only" id="saveBtn" style="margin-right:8px;">💾 Save</button>
     <button class="btn ghost tiny" id="adminBtn" style="margin-right:8px;">🔒 Admin</button>
-    <div class="sync-badge" id="syncBadge" title="Live sync status — click to refresh">
+    <div class="sync-badge" id="syncBadge" title="Live sync status — click to retry / refresh now">
       <span class="sd"></span><span id="syncText">…</span>
     </div>
   </header>
@@ -316,6 +316,7 @@ let sharedUpdatedAt = null;
 let admin = false;
 let dirty = false;
 let lastStamp = 0, saving = false, pollTimer = null;
+let cloudFailed = false, failStreak = 0, nextTryAt = 0;
 initView();
 
 /* ---------- default ---------- */
@@ -358,18 +359,43 @@ function applyShared(j){
 
 /* ---------- cloud (Supabase REST) ---------- */
 function cloudOn(){ return !!(SUPABASE_URL && SUPABASE_KEY); }
-function restUrl(){ return SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/app_state"; }
+/* on the deployed site go through the Netlify proxy (/api/rest → Supabase, see netlify.toml):
+   some ISPs DNS-block *.supabase.co, which made every request fail with "Sync error" */
+const USE_PROXY = /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+function restUrl(){ return USE_PROXY ? "/api/rest/app_state" : SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/app_state"; }
 function hdrs(extra){ return Object.assign({ apikey:SUPABASE_KEY, Authorization:"Bearer "+SUPABASE_KEY,
   "Content-Type":"application/json" }, extra||{}); }
+
+/* a dead or paused project can hang forever — never let a request outlive its timeout */
+async function fetchT(url, opts, ms){
+  const ac = new AbortController(), t = setTimeout(()=>ac.abort(), ms||12000);
+  try{ return await fetch(url, Object.assign({}, opts, {signal:ac.signal})); }
+  finally{ clearTimeout(t); }
+}
+
+/* connection bookkeeping — the badge and the banner must agree with reality */
+function markOnline(text){
+  const wasDown = cloudFailed;
+  cloudFailed=false; failStreak=0; nextTryAt=0;
+  setSync("on", text || (wasDown ? "Reconnected ✓" : "Live ✓"));
+  setBanner();
+}
+function markOffline(text){
+  cloudFailed=true; failStreak++;
+  nextTryAt = Date.now() + Math.min(300000, 6000*Math.pow(2, Math.min(failStreak,6)));  // 12s → 5min
+  setSync("err", text || "Cloud unreachable");
+  setBanner();
+}
+
 async function cloudLoad(){
-  const r=await fetch(restUrl()+"?id=eq."+encodeURIComponent(TEAM_ID)+"&select=data,updated_at",{headers:hdrs(),cache:"no-store"});
+  const r=await fetchT(restUrl()+"?id=eq."+encodeURIComponent(TEAM_ID)+"&select=data,updated_at",{headers:hdrs(),cache:"no-store"},12000);
   if(!r.ok) throw new Error("load "+r.status);
   const rows=await r.json(); return rows[0]||null;
 }
 async function cloudSave(){
   const body=[{ id:TEAM_ID, data:toSimple(), updated_at:new Date().toISOString() }];
-  const r=await fetch(restUrl(),{ method:"POST",
-    headers:hdrs({ Prefer:"resolution=merge-duplicates,return=representation" }), body:JSON.stringify(body) });
+  const r=await fetchT(restUrl(),{ method:"POST",
+    headers:hdrs({ Prefer:"resolution=merge-duplicates,return=representation" }), body:JSON.stringify(body) },15000);
   if(!r.ok) throw new Error("save "+r.status);
   const rows=await r.json(); if(rows[0]&&rows[0].updated_at) lastStamp=Date.parse(rows[0].updated_at);
 }
@@ -378,10 +404,13 @@ function startPolling(){
   if(!cloudOn()) return;
   pollTimer=setInterval(async()=>{
     if(saving||dirty) return;             // don't clobber unpublished local edits
+    if(Date.now()<nextTryAt) return;      // backing off — don't hammer a host that is down
     try{ const row=await cloudLoad();
+      let msg=null;
       if(row){ const st=Date.parse(row.updated_at);
-        if(st>lastStamp){ lastStamp=st; applyShared(row.data); renderAll(); setSync("on","Updated from team ✓"); } } }
-    catch(e){ setSync("err","Sync error"); }
+        if(st>lastStamp){ lastStamp=st; applyShared(row.data); renderAll(); msg="Updated from team ✓"; } }
+      markOnline(msg); }
+    catch(e){ markOffline("Cloud unreachable"); }
   },6000);
 }
 
@@ -396,8 +425,10 @@ async function onSave(){
   if(!requireAdmin()) return;
   if(cloudOn()){
     setSync("syncing","Publishing…");
-    try{ saving=true; await cloudSave(); dirty=false; setSync("on","Published ✓"); setBanner(); toast("Published live to team ✓"); }
-    catch(e){ setSync("err","Publish failed"); toast("Publish failed — check connection"); }
+    try{ saving=true; await cloudSave(); dirty=false; markOnline("Published ✓"); toast("Published live to team ✓"); }
+    catch(e){ markOffline("Publish failed");
+      downloadData();   // cloud is down — hand the admin their edits instead of dropping them
+      toast("Cloud unreachable — downloaded a data.json backup instead"); }
     finally{ saving=false; }
   } else {
     downloadData(); // no cloud → offer a backup download instead
@@ -406,8 +437,9 @@ async function onSave(){
 }
 async function refreshNow(){
   if(cloudOn()){
-    try{ const row=await cloudLoad(); if(row){ lastStamp=Date.parse(row.updated_at); applyShared(row.data); } setSync("on","Live ✓"); }
-    catch(e){ setSync("err","Sync error"); }
+    try{ const row=await cloudLoad(); if(row){ lastStamp=Date.parse(row.updated_at); applyShared(row.data); }
+      markOnline("Live ✓"); startPolling(); }
+    catch(e){ await loadSharedJson(); markOffline("Cloud unreachable"); }
   } else { await loadSharedJson(); }
   dirty=false; renderAll(); setBanner(); toast("Refreshed");
 }
@@ -431,6 +463,13 @@ function setBanner(){
     if(el){ el.style.display="";
       el.innerHTML='⚙️ <b>Cloud not connected</b> — showing <code>data.json</code> (view only). '+
         (admin?'Connect a free Supabase project (card below) for live team sharing.':'Ask your admin to finish cloud setup for live updates.'); }
+  } else if(cloudFailed){
+    if(setup) setup.style.display="none";
+    if(el){ el.style.display="";
+      el.innerHTML='🔴 <b>Cloud offline</b> — cannot reach the Supabase project, so this is the last published copy'+
+        (sharedUpdatedAt?(' from <b>'+escapeHtml(sharedUpdatedAt)+'</b>'):'')+'. Retrying automatically'+
+        (admin?' · Save will download a <code>data.json</code> backup until the cloud is back.'
+              :' — ask your admin to check the cloud project.'); }
   } else {
     if(setup) setup.style.display="none";
     if(el){ el.style.display="";
@@ -644,7 +683,7 @@ function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<
       if(row){ applyShared(row.data); lastStamp=Date.parse(row.updated_at); setSync("on","Live ✓"); }
       else { await loadSharedJson(); if(admin){ try{ await cloudSave(); }catch(_){} } setSync("on","Live ✓"); }
       startPolling();
-    }catch(e){ setSync("err","Cloud error"); await loadSharedJson(); }
+    }catch(e){ await loadSharedJson(); markOffline("Cloud unreachable"); startPolling(); }
   } else {
     setSync("","Not connected"); await loadSharedJson();
   }

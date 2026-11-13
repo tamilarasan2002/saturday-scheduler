@@ -5,3 +5,11 @@
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
+
+# Some Indian ISPs DNS-block *.supabase.co. Route the browser's calls through
+# Netlify (same origin) so Netlify's servers talk to Supabase instead.
+[[redirects]]
+  from = "/api/rest/*"
+  to = "https://oruwywrntwaznwrkcjxj.supabase.co/rest/v1/:splat"
+  status = 200
+  force = true
